@@ -31,14 +31,14 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const backgroundClasses = scrolled 
+    ? "bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm" 
+    : "bg-gradient-to-r from-pink-500/10 via-transparent to-yellow-500/10 dark:from-pink-500/5 dark:via-transparent dark:to-yellow-500/5 backdrop-blur-sm";
+
   return (
     <nav className="sticky top-0 z-50 w-full">
       {/* Background with gradient and blur */}
-      <div className={`absolute inset-0 transition-opacity duration-300 ${
-        scrolled 
-          ? "bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm" 
-          : "bg-gradient-to-r from-pink-500/10 via-transparent to-yellow-500/10 dark:from-pink-500/5 dark:via-transparent dark:to-yellow-500/5 backdrop-blur-sm"
-      }`} />
+      <div className={`absolute inset-0 transition-opacity duration-300 ${backgroundClasses}`} />
       
       <div className="container relative px-6 mx-auto">
         <div className="flex h-16 items-center justify-between">
@@ -99,7 +99,7 @@ const Navbar = () => {
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent>
+              <SheetContent className={backgroundClasses}>
                 <div className="flex flex-col space-y-6 mt-8 px-4">
                   {navigation.map((item) => {
                     const Icon = item.icon;
