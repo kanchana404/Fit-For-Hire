@@ -25,7 +25,6 @@ import {
   ArrowRight,
   
 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { jobs as allJobs } from "@/constants";
 import { Pagination } from "@/components/ui/pagination";
 
