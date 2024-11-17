@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import "../../app/globals.css";
 import {
   Menu,
   Moon,
@@ -10,7 +11,8 @@ import {
   Home,
   FileText,
   Settings,
-  LogIn
+  LogIn,
+  DollarSign
 } from "lucide-react";
 
 const Navbar = () => {
@@ -20,6 +22,7 @@ const Navbar = () => {
   const navigation = [
     { name: "Home", href: "/", icon: Home },
     { name: "Jobs", href: "/jobs", icon: FileText },
+    { name: "Pricing", href: "/#pricing", icon: DollarSign },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
 
