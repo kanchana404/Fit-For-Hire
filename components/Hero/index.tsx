@@ -3,11 +3,13 @@ import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle, Upload, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Input } from "../ui/input";
+import { Input } from "@/components/ui/input";
+import ScanningPopup from "@/components/ScanningPopup";
 
 const Hero = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string>("");
+  const [isScanning, setIsScanning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const features = [
@@ -58,7 +60,7 @@ const Hero = () => {
       setError("Please upload a PDF resume first");
       return;
     }
-    console.log("Starting analysis for files:", files);
+    setIsScanning(true);
   };
 
   const handleBoxClick = () => {
@@ -170,6 +172,12 @@ const Hero = () => {
           </div>
         </div>
       </div>
+
+      <ScanningPopup 
+        isOpen={isScanning}
+        onClose={() => setIsScanning(false)}
+        fileName={files[0]?.name || ''}
+      />
     </div>
   );
 };
