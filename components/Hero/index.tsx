@@ -185,4 +185,3 @@ const Hero = () => {
 export default Hero;
 
 
-// test
