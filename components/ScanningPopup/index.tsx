@@ -1,6 +1,6 @@
 "use client";
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { FileText, CheckCircle, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -8,24 +8,15 @@ interface ScanningPopupProps {
   isOpen: boolean;
   onClose: () => void;
   fileName: string;
+  scanningState: "scanning" | "complete";
 }
 
-const ScanningPopup: React.FC<ScanningPopupProps> = ({ isOpen, onClose, fileName }) => {
-  const [scanningState, setScanningState] = React.useState('scanning');
-  
-  React.useEffect(() => {
-    if (isOpen) {
-      // Simulate scanning process
-      const timer = setTimeout(() => {
-        setScanningState('complete');
-      }, 3000);
-      
-      return () => clearTimeout(timer);
-    } else {
-      setScanningState('scanning');
-    }
-  }, [isOpen]);
-
+const ScanningPopup: React.FC<ScanningPopupProps> = ({
+  isOpen,
+  onClose,
+  fileName,
+  scanningState,
+}) => {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -55,14 +46,14 @@ const ScanningPopup: React.FC<ScanningPopupProps> = ({ isOpen, onClose, fileName
                   <FileText className="w-12 h-12 text-pink-500/50" />
                 </motion.div>
 
-                {scanningState === 'scanning' && (
+                {scanningState === "scanning" && (
                   <motion.div
                     initial={{ top: 0 }}
-                    animate={{ top: '100%' }}
+                    animate={{ top: "100%" }}
                     transition={{
                       duration: 2,
                       repeat: Infinity,
-                      ease: 'linear'
+                      ease: "linear",
                     }}
                     className="absolute left-0 right-0 h-1 bg-gradient-to-r from-pink-500 to-yellow-500"
                   />
@@ -71,14 +62,14 @@ const ScanningPopup: React.FC<ScanningPopupProps> = ({ isOpen, onClose, fileName
 
               <div className="text-center space-y-2">
                 <h3 className="text-lg font-semibold">
-                  {scanningState === 'scanning' ? 'Analyzing Resume' : 'Analysis Complete'}
+                  {scanningState === "scanning"
+                    ? "Analyzing Resume"
+                    : "Analysis Complete"}
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  {fileName}
-                </p>
+                <p className="text-sm text-muted-foreground">{fileName}</p>
               </div>
 
-              {scanningState === 'scanning' ? (
+              {scanningState === "scanning" ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin text-pink-500" />
                   <span>Processing document...</span>
@@ -94,7 +85,7 @@ const ScanningPopup: React.FC<ScanningPopupProps> = ({ isOpen, onClose, fileName
                 </motion.div>
               )}
 
-              {scanningState === 'complete' && (
+              {scanningState === "complete" && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
