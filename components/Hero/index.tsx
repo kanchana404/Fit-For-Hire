@@ -5,12 +5,67 @@ import { ArrowRight, CheckCircle, Upload, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import ScanningPopup from "@/components/ScanningPopup";
+import { useUploadThing } from "@/utils/uploadthing";
 
 const Hero = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string>("");
-  const [isScanning, setIsScanning] = useState(false);
+  const [isScanningPopupOpen, setIsScanningPopupOpen] = useState(false);
+  const [scanningState, setScanningState] = useState<"scanning" | "complete">(
+    "scanning"
+  );
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { startUpload, isUploading } = useUploadThing("resumeUploader", {
+    onClientUploadComplete: async (res) => {
+      if (res && res.length > 0) {
+        const uploadedUrl = res[0].url;
+
+        try {
+          // Send POST request to the API
+          const response = await fetch(
+            "http://127.0.0.1:8000/check-ats-friendly",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ url: uploadedUrl }),
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(
+              errorData.detail || "An error occurred during analysis."
+            );
+          }
+
+          const data = await response.json();
+
+          // Save the analysis result
+          setAnalysisResult(data);
+
+          // Update scanning state to 'complete'
+          setScanningState("complete");
+        } catch (error) {
+          console.error("Error fetching analysis:", error);
+          setError(
+            "An error occurred while analyzing the resume."
+          );
+          // Close the popup in case of error
+          setIsScanningPopupOpen(false);
+        }
+      } else {
+        // Close the popup if upload fails
+        setIsScanningPopupOpen(false);
+      }
+    },
+    onUploadError: (error: Error) => {
+      alert(`ERROR! ${error.message}`);
+      // Close the popup in case of upload error
+      setIsScanningPopupOpen(false);
+    },
+  });
 
   const features = [
     "AI-Powered Resume Screening",
@@ -60,7 +115,22 @@ const Hero = () => {
       setError("Please upload a PDF resume first");
       return;
     }
-    setIsScanning(true);
+
+    // Reset previous analysis result and error
+    setAnalysisResult(null);
+    setError("");
+
+    // Open the scanning popup and set scanning state
+    setIsScanningPopupOpen(true);
+    setScanningState("scanning");
+
+    // Start the upload process
+    startUpload(files);
+  };
+
+  const handlePopupClose = () => {
+    setIsScanningPopupOpen(false);
+    setScanningState("scanning"); // Reset scanning state
   };
 
   const handleBoxClick = () => {
@@ -163,25 +233,46 @@ const Hero = () => {
               <Button
                 onClick={handleStartAnalysis}
                 className="px-8 bg-gradient-to-r h-12 from-pink-500 to-yellow-500 text-white font-medium hover:opacity-90 transition-opacity group"
-                disabled={files.length === 0}
+                disabled={files.length === 0 || isUploading}
               >
-                Start Analysis
+                {isUploading ? "Uploading..." : "Start Analysis"}
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
+
+            {/* Display the analysis result if available and popup is closed */}
+            {!isScanningPopupOpen && analysisResult && (
+              <div className="mt-8">
+                <h2 className="text-2xl font-bold">Analysis Result</h2>
+                <div className="text-left bg-gray-100 p-4 rounded overflow-x-auto text-black">
+                  {analysisResult.feedback
+                    .split("\n")
+                    .filter((line: string) => line.trim() !== "")
+                    .map((line: string, index: number) => (
+                      <p key={index}>{line}</p>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* Display error if any */}
+            {error && (
+              <div className="mt-4 text-red-500">
+                <p>{error}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <ScanningPopup 
-        isOpen={isScanning}
-        onClose={() => setIsScanning(false)}
-        fileName={files[0]?.name || ''}
+      <ScanningPopup
+        isOpen={isScanningPopupOpen}
+        onClose={handlePopupClose}
+        fileName={files[0]?.name || ""}
+        scanningState={scanningState}
       />
     </div>
   );
 };
 
 export default Hero;
-
-
