@@ -5,27 +5,45 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
 interface AnalysisResult {
-  feedback: string[];
+  feedback: string;
+}
+
+// Function to parse the feedback into structured sections
+function parseFeedback(feedback: string): { [key: string]: string[] } {
+  const sections = feedback.split(/(?=^Good Aspects:|^Bad Aspects:|^Suggestions:)/m);
+  const result: { [key: string]: string[] } = {};
+
+  sections.forEach((section) => {
+    const lines = section.split("\n").filter((line) => line.trim() !== "");
+    const headingLine = lines[0].trim().replace(":", "");
+    const items = lines.slice(1).map((line) => line.trim());
+    result[headingLine] = items;
+  });
+
+  return result;
 }
 
 const Result = () => {
   const router = useRouter();
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [fileName, setFileName] = useState<string>("");
+  const [parsedFeedback, setParsedFeedback] = useState<{ [key: string]: string[] } | null>(null);
 
   useEffect(() => {
     const storedResult = localStorage.getItem("analysisResult");
     const storedFileName = localStorage.getItem("fileName");
 
     if (storedResult) {
-      setAnalysisResult(JSON.parse(storedResult));
+      const result = JSON.parse(storedResult);
+      setAnalysisResult(result);
+      setParsedFeedback(parseFeedback(result.feedback));
     }
     if (storedFileName) {
       setFileName(storedFileName);
     }
   }, []);
 
-  if (!analysisResult) {
+  if (!analysisResult || !parsedFeedback) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Button
@@ -71,21 +89,22 @@ const Result = () => {
               </p>
             </div>
 
-            {/* Results Card - Updated to show all points in one area */}
-            <div className="bg-white/50 dark:bg-black/20 rounded-xl shadow-lg p-8 backdrop-blur-sm border border-neutral-200 dark:border-neutral-800">
-              <div className="bg-gradient-to-r from-pink-500/5 to-yellow-500/5 border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
+            {/* Render Feedback Sections */}
+            {Object.keys(parsedFeedback).map((sectionKey, index) => (
+              <div
+                key={index}
+                className="bg-white/50 dark:bg-black/20 rounded-xl shadow-lg p-8 backdrop-blur-sm border border-neutral-200 dark:border-neutral-800"
+              >
+                <h2 className="text-2xl font-semibold mb-4">{sectionKey}</h2>
                 <div className="space-y-4">
-                  {analysisResult.feedback?.split("\n")
-                    .filter((line: string) => line.trim() !== "")
-                    .map((feedback: string, index: number) => (
-                      <div key={index} className="flex items-start gap-3">
-                        <span className="text-pink-500 font-medium">{index + 1}.</span>
-                        <p className="text-foreground">{feedback}</p>
-                      </div>
-                    ))}
+                  {parsedFeedback[sectionKey].map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      <p className="text-foreground">{item}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
+            ))}
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row justify-center gap-4">
