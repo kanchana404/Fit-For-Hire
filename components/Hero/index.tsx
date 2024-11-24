@@ -47,10 +47,10 @@ const Hero = () => {
 
           // Update scanning state to 'complete'
           setScanningState("complete");
-        } catch (error: any) {
+        } catch (error) {
           console.error("Error fetching analysis:", error);
           setError(
-            error.message || "An error occurred while analyzing the resume."
+            "An error occurred while analyzing the resume."
           );
           // Close the popup in case of error
           setIsScanningPopupOpen(false);
