@@ -6,15 +6,14 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import ScanningPopup from "@/components/ScanningPopup";
 import { useUploadThing } from "@/utils/uploadthing";
+import { useRouter } from "next/navigation";
 
 const Hero = () => {
+  const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string>("");
   const [isScanningPopupOpen, setIsScanningPopupOpen] = useState(false);
-  const [scanningState, setScanningState] = useState<"scanning" | "complete">(
-    "scanning"
-  );
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [scanningState, setScanningState] = useState<"scanning" | "complete">("scanning");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { startUpload, isUploading } = useUploadThing("resumeUploader", {
@@ -23,46 +22,36 @@ const Hero = () => {
         const uploadedUrl = res[0].url;
 
         try {
-          // Send POST request to the API
-          const response = await fetch(
-            "http://127.0.0.1:8000/check-ats-friendly",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ url: uploadedUrl }),
-            }
-          );
+          const response = await fetch("http://127.0.0.1:8000/check-ats-friendly", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: uploadedUrl }),
+          });
 
           if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(
-              errorData.detail || "An error occurred during analysis."
-            );
+            throw new Error(errorData.detail || "An error occurred during analysis.");
           }
 
           const data = await response.json();
 
-          // Save the analysis result
-          setAnalysisResult(data);
+          // Store the analysis result and filename in localStorage
+          localStorage.setItem("analysisResult", JSON.stringify(data));
+          localStorage.setItem("fileName", files[0].name);
 
           // Update scanning state to 'complete'
           setScanningState("complete");
         } catch (error) {
           console.error("Error fetching analysis:", error);
-          setError(
-            "An error occurred while analyzing the resume."
-          );
-          // Close the popup in case of error
+          setError("An error occurred while analyzing the resume.");
           setIsScanningPopupOpen(false);
         }
       } else {
-        // Close the popup if upload fails
         setIsScanningPopupOpen(false);
       }
     },
     onUploadError: (error: Error) => {
       alert(`ERROR! ${error.message}`);
-      // Close the popup in case of upload error
       setIsScanningPopupOpen(false);
     },
   });
@@ -116,21 +105,20 @@ const Hero = () => {
       return;
     }
 
-    // Reset previous analysis result and error
-    setAnalysisResult(null);
     setError("");
-
-    // Open the scanning popup and set scanning state
     setIsScanningPopupOpen(true);
     setScanningState("scanning");
-
-    // Start the upload process
     startUpload(files);
   };
 
   const handlePopupClose = () => {
     setIsScanningPopupOpen(false);
-    setScanningState("scanning"); // Reset scanning state
+    setScanningState("scanning");
+    
+    // If scanning is complete, redirect to results page
+    if (scanningState === "complete") {
+      router.push("/result");
+    }
   };
 
   const handleBoxClick = () => {
@@ -140,7 +128,6 @@ const Hero = () => {
   return (
     <div className="mt-10 relative min-h-[calc(100vh-4rem)] flex items-center">
       <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-transparent to-yellow-500/10 dark:from-pink-500/5 dark:via-transparent dark:to-yellow-500/5 -z-10" />
-
       <div className="absolute top-20 right-20 w-96 h-96 bg-pink-500/5 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-20 left-20 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl animate-pulse delay-700" />
 
@@ -240,22 +227,6 @@ const Hero = () => {
               </Button>
             </div>
 
-            {/* Display the analysis result if available and popup is closed */}
-            {!isScanningPopupOpen && analysisResult && (
-              <div className="mt-8">
-                <h2 className="text-2xl font-bold">Analysis Result</h2>
-                <div className="text-left bg-gray-100 p-4 rounded overflow-x-auto text-black">
-                  {analysisResult.feedback
-                    .split("\n")
-                    .filter((line: string) => line.trim() !== "")
-                    .map((line: string, index: number) => (
-                      <p key={index}>{line}</p>
-                    ))}
-                </div>
-              </div>
-            )}
-
-            {/* Display error if any */}
             {error && (
               <div className="mt-4 text-red-500">
                 <p>{error}</p>
