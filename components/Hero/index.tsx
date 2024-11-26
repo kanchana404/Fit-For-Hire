@@ -22,7 +22,7 @@ const Hero = () => {
         const uploadedUrl = res[0].url;
 
         try {
-          const response = await fetch("http://127.0.0.1:8000/check-ats-friendly", {
+          const response = await fetch("/api/check-ats-friendly", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ url: uploadedUrl }),
