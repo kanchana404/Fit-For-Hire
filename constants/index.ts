@@ -1,4 +1,18 @@
-export const jobs = [
+export interface Job {
+  id: number;
+  title: string;
+  company: string;
+  location: string;
+  type: string;
+  salary: string;
+  description: string;
+  requirements?: string[];
+  posted: string;
+  tags?: string[];
+  email: string;
+}
+
+export const jobs: Job[] = [
   {
     id: 1,
     title: "Senior Frontend Developer",
@@ -11,6 +25,7 @@ export const jobs = [
     requirements: ["5+ years React experience", "TypeScript expertise", "UI/UX knowledge"],
     posted: "2 days ago",
     tags: ["React", "TypeScript", "Next.js"],
+    email: "hr.techcorp1@gmail.com",
   },
   {
     id: 2,
@@ -24,6 +39,7 @@ export const jobs = [
     requirements: ["3+ years UI/UX experience", "Figma proficiency", "Portfolio required"],
     posted: "1 week ago",
     tags: ["UI/UX", "Figma", "Design Systems"],
+    email: "careers.designlabs2@outlook.com",
   },
   {
     id: 3,
@@ -37,6 +53,7 @@ export const jobs = [
     requirements: ["Python expertise", "AWS experience", "Microservices architecture"],
     posted: "3 days ago",
     tags: ["Python", "AWS", "Kubernetes"],
+    email: "jobs.cloudscale3@hotmail.com",
   },
   {
     id: 4,
@@ -50,6 +67,7 @@ export const jobs = [
     requirements: ["JavaScript knowledge", "Eagerness to learn", "Team player"],
     posted: "5 days ago",
     tags: ["JavaScript", "Web Development"],
+    email: "apply.startupinc4@gmail.com",
   },
   {
     id: 5,
@@ -63,6 +81,7 @@ export const jobs = [
     requirements: ["Python", "Machine Learning", "Data Visualization"],
     posted: "4 days ago",
     tags: ["Python", "Machine Learning", "Data Science"],
+    email: "recruitment.datacrunch5@outlook.com",
   },
   {
     id: 6,
@@ -76,6 +95,7 @@ export const jobs = [
     requirements: ["Flutter", "React Native", "Mobile UX/UI"],
     posted: "1 day ago",
     tags: ["Flutter", "React Native", "Mobile Development"],
+    email: "jobs@appify6@hotmail.com",
   },
   {
     id: 7,
@@ -89,6 +109,7 @@ export const jobs = [
     requirements: ["Docker", "Kubernetes", "CI/CD"],
     posted: "3 days ago",
     tags: ["DevOps", "Docker", "Kubernetes"],
+    email: "devops@cloudops7@gmail.com",
   },
   {
     id: 8,
@@ -102,6 +123,7 @@ export const jobs = [
     requirements: ["Excellent writing skills", "Technical background", "Attention to detail"],
     posted: "2 weeks ago",
     tags: ["Writing", "Documentation", "Technical"],
+    email: "techwriter@docutech8@outlook.com",
   },
   {
     id: 9,
@@ -115,6 +137,7 @@ export const jobs = [
     requirements: ["Linux", "Windows Server", "Networking", "Security Protocols"],
     posted: "5 days ago",
     tags: ["IT Administration", "Systems", "Networking"],
+    email: "admin.netsec9@hotmail.com",
   },
   {
     id: 10,
@@ -128,6 +151,7 @@ export const jobs = [
     requirements: ["AWS Certified Solutions Architect", "Cloud Migration", "CI/CD"],
     posted: "2 days ago",
     tags: ["Cloud Computing", "AWS", "Azure"],
+    email: "careers@cloudnet10@gmail.com",
   },
   {
     id: 11,
@@ -141,6 +165,7 @@ export const jobs = [
     requirements: ["Google Analytics", "SQL", "Excel", "Data Visualization"],
     posted: "1 week ago",
     tags: ["Data Analysis", "Marketing", "Google Analytics"],
+    email: "marketing@dataviz11@outlook.com",
   },
   {
     id: 12,
@@ -154,6 +179,7 @@ export const jobs = [
     requirements: ["Salesforce Certification", "CRM Systems", "Data Management"],
     posted: "3 days ago",
     tags: ["Salesforce", "CRM", "Sales Operations"],
+    email: "admin@salesforcepros12@hotmail.com",
   },
   {
     id: 13,
@@ -167,6 +193,7 @@ export const jobs = [
     requirements: ["Unity", "C#", "Mobile Game Design", "3D Modelling"],
     posted: "1 week ago",
     tags: ["Game Development", "Mobile", "Unity"],
+    email: "games@gamepro13@gmail.com",
   },
   {
     id: 14,
@@ -180,6 +207,7 @@ export const jobs = [
     requirements: ["Penetration Testing", "Firewalls", "Security Incident Response"],
     posted: "3 days ago",
     tags: ["Cybersecurity", "Threat Detection", "Pen Testing"],
+    email: "security@securenet14@outlook.com",
   },
   {
     id: 15,
@@ -193,6 +221,7 @@ export const jobs = [
     requirements: ["Employee Relations", "Talent Acquisition", "HR Strategy"],
     posted: "1 week ago",
     tags: ["HR", "Employee Relations", "Strategy"],
+    email: "hr@peoplefirst15@hotmail.com",
   },
   {
     id: 16,
@@ -206,6 +235,7 @@ export const jobs = [
     requirements: ["Automated Testing", "Selenium", "Quality Metrics"],
     posted: "4 days ago",
     tags: ["Quality Assurance", "Testing", "Automation"],
+    email: "qa@softtest16@gmail.com",
   },
   {
     id: 17,
@@ -219,6 +249,7 @@ export const jobs = [
     requirements: ["Organizational Skills", "Time Management", "Customer Service"],
     posted: "2 weeks ago",
     tags: ["Admin Support", "Remote", "Virtual Assistant"],
+    email: "assistant@adminsolutions17@outlook.com",
   },
   {
     id: 18,
@@ -232,6 +263,7 @@ export const jobs = [
     requirements: ["Branding", "Marketing Strategy", "Creative Direction"],
     posted: "1 week ago",
     tags: ["Branding", "Strategy", "Marketing"],
+    email: "strategy@brandify18@hotmail.com",
   },
   {
     id: 19,
@@ -245,6 +277,7 @@ export const jobs = [
     requirements: ["Customer Relations", "Product Knowledge", "Communication Skills"],
     posted: "3 days ago",
     tags: ["Customer Support", "Success", "Customer Engagement"],
+    email: "success@customercare19@gmail.com",
   },
   {
     id: 20,
@@ -258,6 +291,7 @@ export const jobs = [
     requirements: ["Game Design", "Unity", "3D Modelling", "Creative Problem Solving"],
     posted: "1 week ago",
     tags: ["Game Design", "Unity", "3D Modelling"],
+    email: "design@pixelstudios20@outlook.com",
   },
   // More jobs added here...
 ];

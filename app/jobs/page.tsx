@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useState, useMemo, useEffect } from "react";
 import { Command, CommandInput } from "@/components/ui/command";
 import {
@@ -17,16 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Briefcase,
-  MapPin,
-  DollarSign,
-  Clock,
-  ArrowRight,
-  
-} from "lucide-react";
-import { jobs as allJobs } from "@/constants";
+import { Briefcase, MapPin, DollarSign, Clock, ArrowRight } from "lucide-react";
+import { jobs as allJobs, Job } from "@/constants"; // Assume Job is the type of a job object
 import { Pagination } from "@/components/ui/pagination";
+import JobApplicationPopup from "@/components/JobApplicationPopup"; // Adjust the import path as needed
 
 const ITEMS_PER_PAGE = 5;
 
@@ -35,6 +29,7 @@ const JobListings = () => {
   const [jobType, setJobType] = useState("All");
   const [mounted, setMounted] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -63,18 +58,22 @@ const JobListings = () => {
     return filteredJobs.slice(start, start + ITEMS_PER_PAGE);
   }, [currentPage, filteredJobs]);
 
+  const handleApplyNow = (job: Job) => {
+    setSelectedJob(job);
+  };
+
+  const handleClosePopup = () => {
+    setSelectedJob(null);
+  };
+
   if (!mounted) return null;
 
   return (
     <div className="mt-10 relative min-h-screen bg-background transition-colors duration-300">
-      {/* Matching gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-transparent to-yellow-500/10 dark:from-pink-500/5 dark:via-transparent dark:to-yellow-500/5 -z-10" />
-      
-      {/* Decorative elements */}
-      <div className="absolute top-20 right-20 w-96 h-96 bg-pink-500/5 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 left-20 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl animate-pulse delay-700" />
+      {/* Background elements */}
 
       <div className="container mx-auto px-4 py-12">
+        {/* Search and Filters */}
         <div className="max-w-4xl mx-auto mb-12">
           <h1 className="text-4xl font-bold text-center mb-8">
             Find Your{" "}
@@ -110,12 +109,14 @@ const JobListings = () => {
           </div>
         </div>
 
+        {/* Job Listings */}
         <div className="max-w-4xl mx-auto space-y-6">
           {paginatedJobs.length === 0 ? (
             <Card className="p-8 text-center backdrop-blur-sm bg-background/80 border-pink-500/20">
               <CardContent>
                 <p className="text-muted-foreground text-lg">
-                  No jobs found matching your search criteria. Try adjusting your filters.
+                  No jobs found matching your search criteria. Try adjusting
+                  your filters.
                 </p>
               </CardContent>
             </Card>
@@ -131,9 +132,14 @@ const JobListings = () => {
                       <CardTitle className="text-2xl mb-2 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-yellow-500">
                         {job.title}
                       </CardTitle>
-                      <p className="text-lg text-muted-foreground">{job.company}</p>
+                      <p className="text-lg text-muted-foreground">
+                        {job.company}
+                      </p>
                     </div>
-                    <Button className="bg-gradient-to-r from-pink-500 to-yellow-500 text-white hover:opacity-90 transition-opacity group">
+                    <Button
+                      onClick={() => handleApplyNow(job)}
+                      className="bg-gradient-to-r from-pink-500 to-yellow-500 text-white hover:opacity-90 transition-opacity group"
+                    >
                       Apply Now
                       <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </Button>
@@ -190,6 +196,7 @@ const JobListings = () => {
           )}
         </div>
 
+        {/* Pagination */}
         <div className="max-w-4xl mx-auto mt-8">
           <Pagination
             currentPage={currentPage}
@@ -199,6 +206,16 @@ const JobListings = () => {
           />
         </div>
       </div>
+
+      {/* Job Application Popup */}
+      {selectedJob && (
+        <JobApplicationPopup
+          isOpen={!!selectedJob}
+          onClose={handleClosePopup}
+          jobTitle={selectedJob.title}
+          jobCompany={selectedJob.company}
+        />
+      )}
     </div>
   );
 };
