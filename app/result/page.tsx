@@ -1,9 +1,17 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Briefcase, Clock, DollarSign, FrownIcon, MapPin } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Briefcase,
+  Clock,
+  DollarSign,
+  FrownIcon,
+  MapPin,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { jobs } from "@/constants";
+import { jobs, Job } from "@/constants"; // Import Job from constants
 import {
   Card,
   CardContent,
@@ -12,6 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import JobApplicationPopup from "@/components/JobApplicationPopup";
 
 interface AnalysisFeedback {
   good_aspects: string[];
@@ -24,19 +33,6 @@ interface AnalysisResult {
   skills: string[];
 }
 
-interface Job {
-  id: number;
-  title: string;
-  company: string;
-  location: string;
-  type: string;
-  salary: string;
-  description: string;
-  requirements: string[];
-  posted: string;
-  tags: string[];
-}
-
 function findSuitableJobs(skills: string[]): Job[] {
   if (!skills || skills.length === 0) return [];
 
@@ -45,8 +41,8 @@ function findSuitableJobs(skills: string[]): Job[] {
     const jobSearchString = [
       job.title.toLowerCase(),
       job.description.toLowerCase(),
-      ...job.tags.map((tag) => tag.toLowerCase()),
-      ...job.requirements.map((req) => req.toLowerCase()),
+      ...(job.tags || []).map((tag) => tag.toLowerCase()),
+      ...(job.requirements || []).map((req) => req.toLowerCase()),
     ].join(" ");
 
     // Count skill matches
@@ -61,11 +57,23 @@ function findSuitableJobs(skills: string[]): Job[] {
 
 const Result = () => {
   const router = useRouter();
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(
+    null
+  );
   const [fileName, setFileName] = useState<string>("");
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
   const [extractedSkills, setExtractedSkills] = useState<string[]>([]);
   const [error, setError] = useState<string>("");
+
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+
+  const handleApplyNow = (job: Job) => {
+    setSelectedJob(job);
+  };
+
+  const handleClosePopup = () => {
+    setSelectedJob(null);
+  };
 
   useEffect(() => {
     const storedResult = localStorage.getItem("analysisResult");
@@ -93,7 +101,9 @@ const Result = () => {
         setRecommendedJobs(jobs);
       } catch (err) {
         console.error("Error parsing analysis result:", err);
-        setError("Failed to load analysis results. Please try uploading your resume again.");
+        setError(
+          "Failed to load analysis results. Please try uploading your resume again."
+        );
       }
     }
     if (storedFileName) {
@@ -167,35 +177,37 @@ const Result = () => {
             {/* Left Column - Feedback Sections */}
             <div className="w-full md:w-1/2 space-y-8">
               {/* Render Feedback Sections */}
-              {Object.entries(analysisResult.feedback).map(([sectionKey, points], index) => (
-                <div
-                  key={index}
-                  className="bg-white/50 dark:bg-black/20 rounded-xl shadow-lg p-8 backdrop-blur-sm border border-neutral-200 dark:border-neutral-800"
-                >
-                  <h2 className="text-2xl font-semibold mb-4 capitalize">
-                    {sectionKey.replace('_', ' ')}
-                  </h2>
-                  <div className="space-y-4">
-                    {Array.isArray(points) ? (
-                      points.map((item, idx) => (
-                        <div key={idx} className="flex items-start gap-3">
-                          <CheckCircleIcon className="mt-1 w-5 h-5 text-pink-500" />
-                          <p className="text-foreground">{item}</p>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-red-500">Invalid data format for {sectionKey}.</p>
-                    )}
+              {Object.entries(analysisResult.feedback).map(
+                ([sectionKey, points], index) => (
+                  <div
+                    key={index}
+                    className="bg-white/50 dark:bg-black/20 rounded-xl shadow-lg p-8 backdrop-blur-sm border border-neutral-200 dark:border-neutral-800"
+                  >
+                    <h2 className="text-2xl font-semibold mb-4 capitalize">
+                      {sectionKey.replace("_", " ")}
+                    </h2>
+                    <div className="space-y-4">
+                      {Array.isArray(points) ? (
+                        points.map((item, idx) => (
+                          <div key={idx} className="flex items-start gap-3">
+                            <CheckCircleIcon className="mt-1 w-5 h-5 text-pink-500" />
+                            <p className="text-foreground">{item}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-red-500">
+                          Invalid data format for {sectionKey}.
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              )}
             </div>
 
             {/* Right Column - Recommended Jobs */}
             <div className="w-full md:w-1/2 space-y-8">
-              <div
-                className="bg-white/50 dark:bg-black/20 rounded-xl shadow-lg p-8 backdrop-blur-sm border border-neutral-200 dark:border-neutral-800"
-              >
+              <div className="bg-white/50 dark:bg-black/20 rounded-xl shadow-lg p-8 backdrop-blur-sm border border-neutral-200 dark:border-neutral-800">
                 <h2 className="text-2xl font-semibold mb-4 flex items-center gap-3">
                   <Briefcase className="h-6 w-6 text-pink-500" />
                   Recommended Jobs
@@ -205,13 +217,18 @@ const Result = () => {
                 {recommendedJobs.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-8 text-center">
                     <FrownIcon className="h-16 w-16 text-pink-500 mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">No Matching Jobs Found</h3>
+                    <h3 className="text-xl font-semibold mb-2">
+                      No Matching Jobs Found
+                    </h3>
                     <p className="text-muted-foreground mb-4">
-                      We couldn&apos;t find any jobs matching your profile at the moment.
+                      We couldn&apos;t find any jobs matching your profile at the
+                      moment.
                     </p>
                     {extractedSkills.length > 0 && (
                       <div>
-                        <p className="text-foreground mb-2">Skills we identified:</p>
+                        <p className="text-foreground mb-2">
+                          Skills we identified:
+                        </p>
                         <div className="flex flex-wrap justify-center gap-2">
                           {extractedSkills.map((skill) => (
                             <span
@@ -240,9 +257,14 @@ const Result = () => {
                             <CardTitle className="text-2xl mb-2 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-yellow-500">
                               {job.title}
                             </CardTitle>
-                            <p className="text-lg text-muted-foreground">{job.company}</p>
+                            <p className="text-lg text-muted-foreground">
+                              {job.company}
+                            </p>
                           </div>
-                          <Button className="bg-gradient-to-r from-pink-500 to-yellow-500 text-white hover:opacity-90 transition-opacity group flex items-center">
+                          <Button
+                            onClick={() => handleApplyNow(job)}
+                            className="bg-gradient-to-r from-pink-500 to-yellow-500 text-white hover:opacity-90 transition-opacity group flex items-center"
+                          >
                             Apply Now
                             <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                           </Button>
@@ -269,7 +291,9 @@ const Result = () => {
                           </div>
                         </div>
 
-                        <p className="text-muted-foreground">{job.description}</p>
+                        <p className="text-muted-foreground">
+                          {job.description}
+                        </p>
 
                         <div className="space-y-2">
                           <h4 className="font-medium">Requirements:</h4>
@@ -323,6 +347,17 @@ const Result = () => {
           </div>
         </div>
       </div>
+
+      {/* Job Application Popup */}
+      {selectedJob && (
+        <JobApplicationPopup
+          isOpen={!!selectedJob}
+          onClose={handleClosePopup}
+          jobTitle={selectedJob.title}
+          jobCompany={selectedJob.company}
+          jobEmail={selectedJob.email}
+        />
+      )}
     </div>
   );
 };
@@ -336,12 +371,7 @@ const CheckCircleIcon = ({ className }: { className?: string }) => (
     viewBox="0 0 24 24"
     stroke="currentColor"
   >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M9 12l2 2 4-4"
-    />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
   </svg>
 );
 

@@ -14,7 +14,6 @@ import {
 import { Upload, FileText, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUploadThing } from "@/utils/uploadthing";
-import { Job } from "@/constants";
 import { toast } from "sonner"; // Import toast from Sonner
 
 interface JobApplicationPopupProps {
@@ -365,7 +364,7 @@ const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
           className="w-full bg-gradient-to-r from-pink-500 to-yellow-500 text-white hover:opacity-90"
           disabled={isUploading}
         >
-          {isUploading ? "Uploading..." : "Submit Application"}
+          {isUploading ? "Sending..." : "Submit Application"}
           <ArrowRight className="ml-2 w-4 h-4" />
         </Button>
       </DialogContent>
