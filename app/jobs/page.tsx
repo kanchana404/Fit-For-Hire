@@ -1,3 +1,5 @@
+// app/jobs/page.tsx
+
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
 import { Command, CommandInput } from "@/components/ui/command";
@@ -24,9 +26,10 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
-import { jobs as allJobs, Job } from "@/constants"; // Import Job interface
+import { jobs as allJobs, Job } from "@/constants";
 import { Pagination } from "@/components/ui/pagination";
 import JobApplicationPopup from "@/components/JobApplicationPopup";
+import { Toaster } from "@/components/ui/sonner";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -76,6 +79,9 @@ const JobListings = () => {
 
   return (
     <div className="mt-10 relative min-h-screen bg-background transition-colors duration-300">
+      {/* Include the Toaster component */}
+      <Toaster />
+
       {/* Background elements */}
 
       <div className="container mx-auto px-4 py-12">
@@ -121,8 +127,8 @@ const JobListings = () => {
             <Card className="p-8 text-center backdrop-blur-sm bg-background/80 border-pink-500/20">
               <CardContent>
                 <p className="text-muted-foreground text-lg">
-                  No jobs found matching your search criteria. Try adjusting your
-                  filters.
+                  No jobs found matching your search criteria. Try adjusting
+                  your filters.
                 </p>
               </CardContent>
             </Card>
@@ -220,7 +226,7 @@ const JobListings = () => {
           onClose={handleClosePopup}
           jobTitle={selectedJob.title}
           jobCompany={selectedJob.company}
-          jobEmail={selectedJob.email} // Pass jobEmail to the popup
+          jobEmail={selectedJob.email}
         />
       )}
     </div>

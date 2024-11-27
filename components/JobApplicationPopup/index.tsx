@@ -1,3 +1,5 @@
+// components/JobApplicationPopup/index.tsx
+
 "use client";
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -12,13 +14,15 @@ import {
 import { Upload, FileText, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUploadThing } from "@/utils/uploadthing";
+import { Job } from "@/constants";
+import { toast } from "sonner"; // Import toast from Sonner
 
 interface JobApplicationPopupProps {
   isOpen: boolean;
   onClose: () => void;
   jobTitle: string;
   jobCompany: string;
-  jobEmail: string; // Add jobEmail prop
+  jobEmail: string;
 }
 
 interface PersonalDetails {
@@ -37,10 +41,12 @@ const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
   onClose,
   jobTitle,
   jobCompany,
-  jobEmail, // Receive jobEmail prop
+  jobEmail,
 }) => {
   const [files, setFiles] = useState<File[]>([]);
-  const [errors, setErrors] = useState<{ [key in keyof PersonalDetails | "resume"]?: string }>({});
+  const [errors, setErrors] = useState<
+    { [key in keyof PersonalDetails | "resume"]?: string }
+  >({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [personalDetails, setPersonalDetails] = useState<PersonalDetails>({
@@ -63,7 +69,7 @@ const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
           resumeUrl: uploadedUrl,
           jobTitle,
           jobCompany,
-          jobEmail, // Include jobEmail in the application data
+          jobEmail,
         };
 
         // Send the application data to the backend API route
@@ -77,20 +83,20 @@ const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
           });
 
           if (response.ok) {
-            console.log("Application submitted successfully");
+            toast.success("Application submitted successfully!");
             onClose();
           } else {
             const errorData = await response.json();
-            alert(`Failed to send application: ${errorData.message}`);
+            toast.error(`Failed to send application: ${errorData.message}`);
           }
         } catch (error) {
           console.error("Error submitting application:", error);
-          alert("An error occurred while submitting your application.");
+          toast.error("An error occurred while submitting your application.");
         }
       }
     },
     onUploadError: (error: Error) => {
-      alert(`ERROR! ${error.message}`);
+      toast.error(`Upload Error: ${error.message}`);
     },
   });
 
@@ -98,12 +104,15 @@ const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
     switch (name) {
       case "firstName":
       case "lastName":
-        return value.trim().length >= 2 ? "" : "Name must be at least 2 characters";
+        return value.trim().length >= 2
+          ? ""
+          : "Name must be at least 2 characters";
       case "email":
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(value) ? "" : "Invalid email address";
       case "phone":
-        const phoneRegex = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
+        const phoneRegex =
+          /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
         return phoneRegex.test(value) ? "" : "Invalid phone number";
       case "zipCode":
         return value.trim().length >= 4 ? "" : "Invalid zip code";
@@ -131,9 +140,15 @@ const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
   };
 
   const validateAllFields = () => {
-    const newErrors: { [key in keyof PersonalDetails | "resume"]?: string } = {};
+    const newErrors: { [key in keyof PersonalDetails | "resume"]?: string } =
+      {};
 
-    const requiredFields: (keyof PersonalDetails)[] = ["firstName", "lastName", "email", "phone"];
+    const requiredFields: (keyof PersonalDetails)[] = [
+      "firstName",
+      "lastName",
+      "email",
+      "phone",
+    ];
     requiredFields.forEach((field) => {
       const error = validateField(field, personalDetails[field]);
       if (error) {
