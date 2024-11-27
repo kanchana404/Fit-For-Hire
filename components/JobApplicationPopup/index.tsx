@@ -18,6 +18,7 @@ interface JobApplicationPopupProps {
   onClose: () => void;
   jobTitle: string;
   jobCompany: string;
+  jobEmail: string; // Add jobEmail prop
 }
 
 interface PersonalDetails {
@@ -36,6 +37,7 @@ const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
   onClose,
   jobTitle,
   jobCompany,
+  jobEmail, // Receive jobEmail prop
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [errors, setErrors] = useState<{ [key in keyof PersonalDetails | "resume"]?: string }>({});
@@ -61,9 +63,30 @@ const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
           resumeUrl: uploadedUrl,
           jobTitle,
           jobCompany,
+          jobEmail, // Include jobEmail in the application data
         };
-        console.log("Application submitted", applicationData);
-        onClose();
+
+        // Send the application data to the backend API route
+        try {
+          const response = await fetch("/api/send-email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(applicationData),
+          });
+
+          if (response.ok) {
+            console.log("Application submitted successfully");
+            onClose();
+          } else {
+            const errorData = await response.json();
+            alert(`Failed to send application: ${errorData.message}`);
+          }
+        } catch (error) {
+          console.error("Error submitting application:", error);
+          alert("An error occurred while submitting your application.");
+        }
       }
     },
     onUploadError: (error: Error) => {

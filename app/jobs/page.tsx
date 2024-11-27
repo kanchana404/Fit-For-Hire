@@ -17,10 +17,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Briefcase, MapPin, DollarSign, Clock, ArrowRight } from "lucide-react";
-import { jobs as allJobs, Job } from "@/constants"; // Assume Job is the type of a job object
+import {
+  Briefcase,
+  MapPin,
+  DollarSign,
+  Clock,
+  ArrowRight,
+} from "lucide-react";
+import { jobs as allJobs, Job } from "@/constants"; // Import Job interface
 import { Pagination } from "@/components/ui/pagination";
-import JobApplicationPopup from "@/components/JobApplicationPopup"; // Adjust the import path as needed
+import JobApplicationPopup from "@/components/JobApplicationPopup";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -115,8 +121,8 @@ const JobListings = () => {
             <Card className="p-8 text-center backdrop-blur-sm bg-background/80 border-pink-500/20">
               <CardContent>
                 <p className="text-muted-foreground text-lg">
-                  No jobs found matching your search criteria. Try adjusting
-                  your filters.
+                  No jobs found matching your search criteria. Try adjusting your
+                  filters.
                 </p>
               </CardContent>
             </Card>
@@ -214,6 +220,7 @@ const JobListings = () => {
           onClose={handleClosePopup}
           jobTitle={selectedJob.title}
           jobCompany={selectedJob.company}
+          jobEmail={selectedJob.email} // Pass jobEmail to the popup
         />
       )}
     </div>

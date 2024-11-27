@@ -25,7 +25,7 @@ export const jobs: Job[] = [
     requirements: ["5+ years React experience", "TypeScript expertise", "UI/UX knowledge"],
     posted: "2 days ago",
     tags: ["React", "TypeScript", "Next.js"],
-    email: "hr.techcorp1@gmail.com",
+    email: "kanchanakavitha6@gmail.com",
   },
   {
     id: 2,
