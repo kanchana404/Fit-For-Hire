@@ -1,5 +1,5 @@
-"use client"
-import React, { useState } from 'react';
+"use client";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { CheckCircle } from "lucide-react";
@@ -11,7 +11,7 @@ const PricingPlans = () => {
     "Basic Resume Screening",
     "Up to 25 resumes/month",
     "Standard Support",
-    "Basic Analytics"
+    "Basic Analytics",
   ];
 
   const proPlanFeatures = [
@@ -20,7 +20,7 @@ const PricingPlans = () => {
     "Priority Support",
     "Advanced Analytics",
     "Custom Parsing Rules",
-    "API Access"
+    "API Access",
   ];
 
   const handleToggle = () => {
@@ -49,9 +49,13 @@ const PricingPlans = () => {
 
           {/* Billing Toggle */}
           <div className="flex items-center justify-center gap-4 select-none">
-            <button 
+            <button
               onClick={() => setIsAnnual(false)}
-              className={`text-sm transition-colors ${!isAnnual ? 'text-foreground font-medium' : 'text-muted-foreground'}`}
+              className={`text-sm transition-colors ${
+                !isAnnual
+                  ? "text-foreground font-medium"
+                  : "text-muted-foreground"
+              }`}
             >
               Monthly
             </button>
@@ -62,11 +66,16 @@ const PricingPlans = () => {
                 className="data-[state=checked]:bg-gradient-to-r from-pink-500 to-yellow-500"
               />
             </div>
-            <button 
+            <button
               onClick={() => setIsAnnual(true)}
-              className={`text-sm transition-colors ${isAnnual ? 'text-foreground font-medium' : 'text-muted-foreground'}`}
+              className={`text-sm transition-colors ${
+                isAnnual
+                  ? "text-foreground font-medium"
+                  : "text-muted-foreground"
+              }`}
             >
-              Yearly <span className="text-pink-500 font-medium ml-1">(-40%)</span>
+              Yearly{" "}
+              <span className="text-pink-500 font-medium ml-1">(-40%)</span>
             </button>
           </div>
         </div>
@@ -76,16 +85,25 @@ const PricingPlans = () => {
           {/* Free Plan */}
           <div className="relative p-8 rounded-xl border bg-card backdrop-blur-sm flex flex-col h-full">
             <div className="flex-grow">
-              <h3 className="text-xl font-semibold mb-2 text-foreground">Free Plan</h3>
-              <p className="text-muted-foreground mb-4">Perfect for getting started</p>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">
+                Free Plan
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                Perfect for getting started
+              </p>
               <div className="text-3xl font-bold mb-6 text-foreground">
-                $0 <span className="text-base font-normal text-muted-foreground">/month</span>
+                $0{" "}
+                <span className="text-base font-normal text-muted-foreground">
+                  /month
+                </span>
               </div>
               <div className="space-y-4 mb-8 flex-grow">
                 {freePlanFeatures.map((feature, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-pink-500 shrink-0" />
-                    <span className="text-foreground dark:text-foreground">{feature}</span>
+                    <span className="text-foreground dark:text-foreground">
+                      {feature}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -95,7 +113,7 @@ const PricingPlans = () => {
                 variant="outline"
                 className="w-full transition-colors bg-black text-white dark:bg-white dark:text-black hover:bg-pink-500/10"
               >
-                Get Started
+                Your plan
               </Button>
             </div>
           </div>
@@ -106,19 +124,25 @@ const PricingPlans = () => {
               MOST POPULAR
             </div>
             <div className="flex-grow">
-              <h3 className="text-xl font-semibold mb-2 text-foreground">Pro Plan</h3>
-              <p className="text-muted-foreground mb-4">For growing businesses</p>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">
+                Pro Plan
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                For growing businesses
+              </p>
               <div className="text-3xl font-bold mb-6 text-foreground">
-                ${isAnnual ? '55' : '8'}{' '}
+                ${isAnnual ? "55" : "8"}{" "}
                 <span className="text-base font-normal text-muted-foreground">
-                  /{isAnnual ? 'year' : 'month'}
+                  /{isAnnual ? "year" : "month"}
                 </span>
               </div>
               <div className="space-y-4 mb-8 flex-grow">
                 {proPlanFeatures.map((feature, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-pink-500 shrink-0" />
-                    <span className="text-foreground dark:text-foreground">{feature}</span>
+                    <span className="text-foreground dark:text-foreground">
+                      {feature}
+                    </span>
                   </div>
                 ))}
               </div>
