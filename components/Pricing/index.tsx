@@ -3,9 +3,11 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { CheckCircle } from "lucide-react";
+import { loadStripe } from "@stripe/stripe-js"; // Import loadStripe
 
 const PricingPlans = () => {
   const [isAnnual, setIsAnnual] = useState(false);
+  const [plan, setPlan] = useState<'free' | 'pro'>('pro'); // Default to pro plan ($8/month)
 
   const freePlanFeatures = [
     "Basic Resume Screening",
@@ -26,6 +28,41 @@ const PricingPlans = () => {
   const handleToggle = () => {
     setIsAnnual(!isAnnual);
   };
+
+  const handlePlanSelection = (selectedPlan: 'free' | 'pro') => {
+    setPlan(selectedPlan);
+  };
+
+  const createCheckoutSession = async () => {
+    if (plan === 'free') {
+      alert("You selected the Free plan, no payment required.");
+      return; // Do nothing for free plan
+    }
+
+    try {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ plan, isAnnual }),
+      });
+
+      const data = await response.json();
+      if (data.id) {
+        // Redirect to Stripe Checkout
+        const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string);
+        stripe?.redirectToCheckout({ sessionId: data.id });
+      } else {
+        alert("Error creating checkout session");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred while creating the checkout session");
+    }
+  };
+
+  const planPrice = isAnnual ? 55 : 8; // Corrected price logic
 
   return (
     <div className="relative py-20 px-4">
@@ -51,11 +88,7 @@ const PricingPlans = () => {
           <div className="flex items-center justify-center gap-4 select-none">
             <button
               onClick={() => setIsAnnual(false)}
-              className={`text-sm transition-colors ${
-                !isAnnual
-                  ? "text-foreground font-medium"
-                  : "text-muted-foreground"
-              }`}
+              className={`text-sm transition-colors ${!isAnnual ? "text-foreground font-medium" : "text-muted-foreground"}`}
             >
               Monthly
             </button>
@@ -68,11 +101,7 @@ const PricingPlans = () => {
             </div>
             <button
               onClick={() => setIsAnnual(true)}
-              className={`text-sm transition-colors ${
-                isAnnual
-                  ? "text-foreground font-medium"
-                  : "text-muted-foreground"
-              }`}
+              className={`text-sm transition-colors ${isAnnual ? "text-foreground font-medium" : "text-muted-foreground"}`}
             >
               Yearly{" "}
               <span className="text-pink-500 font-medium ml-1">(-40%)</span>
@@ -85,25 +114,16 @@ const PricingPlans = () => {
           {/* Free Plan */}
           <div className="relative p-8 rounded-xl border bg-card backdrop-blur-sm flex flex-col h-full">
             <div className="flex-grow">
-              <h3 className="text-xl font-semibold mb-2 text-foreground">
-                Free Plan
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                Perfect for getting started
-              </p>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">Free Plan</h3>
+              <p className="text-muted-foreground mb-4">Perfect for getting started</p>
               <div className="text-3xl font-bold mb-6 text-foreground">
-                $0{" "}
-                <span className="text-base font-normal text-muted-foreground">
-                  /month
-                </span>
+                $0 <span className="text-base font-normal text-muted-foreground">/month</span>
               </div>
               <div className="space-y-4 mb-8 flex-grow">
                 {freePlanFeatures.map((feature, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-pink-500 shrink-0" />
-                    <span className="text-foreground dark:text-foreground">
-                      {feature}
-                    </span>
+                    <span className="text-foreground dark:text-foreground">{feature}</span>
                   </div>
                 ))}
               </div>
@@ -112,8 +132,9 @@ const PricingPlans = () => {
               <Button
                 variant="outline"
                 className="w-full transition-colors bg-black text-white dark:bg-white dark:text-black hover:bg-pink-500/10"
+                onClick={() => handlePlanSelection('free')}
               >
-                Your plan
+                Select Plan
               </Button>
             </div>
           </div>
@@ -124,14 +145,10 @@ const PricingPlans = () => {
               MOST POPULAR
             </div>
             <div className="flex-grow">
-              <h3 className="text-xl font-semibold mb-2 text-foreground">
-                Pro Plan
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                For growing businesses
-              </p>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">Pro Plan</h3>
+              <p className="text-muted-foreground mb-4">For growing businesses</p>
               <div className="text-3xl font-bold mb-6 text-foreground">
-                ${isAnnual ? "55" : "8"}{" "}
+                ${planPrice}{" "}
                 <span className="text-base font-normal text-muted-foreground">
                   /{isAnnual ? "year" : "month"}
                 </span>
@@ -140,16 +157,18 @@ const PricingPlans = () => {
                 {proPlanFeatures.map((feature, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-pink-500 shrink-0" />
-                    <span className="text-foreground dark:text-foreground">
-                      {feature}
-                    </span>
+                    <span className="text-foreground dark:text-foreground">{feature}</span>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="mt-auto">
-              <Button className="w-full bg-gradient-to-r from-pink-500 to-yellow-500 text-white hover:opacity-90">
-                Upgrade Now
+            <div className="mt-4">
+              <Button
+                variant="outline"
+                className="w-full transition-colors bg-gradient-to-r from-pink-500 to-yellow-500 text-white"
+                onClick={createCheckoutSession}
+              >
+                {isAnnual ? "Pay $55/year" : "Pay $8/month"}
               </Button>
             </div>
           </div>
