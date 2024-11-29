@@ -37,6 +37,6 @@ Fit for Hire is a micro SaaS platform that uses artificial intelligence (AI) to 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/fit-for-hire.git
-   cd fit-for-hire
+   https://github.com/kanchana404/Fit-For-Hire
+   cd Fit-For-Hire
 
