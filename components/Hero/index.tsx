@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle, Upload, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,24 @@ const Hero = () => {
   const [isScanningPopupOpen, setIsScanningPopupOpen] = useState(false);
   const [scanningState, setScanningState] = useState<"scanning" | "complete">("scanning");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch and log the user's IP address on component mount
+  useEffect(() => {
+    const fetchIPAddress = async () => {
+      try {
+        const response = await fetch("https://api.ipify.org?format=json");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log("User's IP Address:", data.ip);
+      } catch (err) {
+        console.error("Failed to fetch IP address:", err);
+      }
+    };
+
+    fetchIPAddress();
+  }, []);
 
   const { startUpload, isUploading } = useUploadThing("resumeUploader", {
     onClientUploadComplete: async (res) => {
