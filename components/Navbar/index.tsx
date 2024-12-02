@@ -16,12 +16,7 @@ import {
   LogOut, // Optional: If you want a separate icon for logout
 } from "lucide-react";
 import Link from "next/link";
-import {
-  SignedIn,
-  SignedOut,
-  SignOutButton,
- 
-} from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignOutButton } from "@clerk/nextjs";
 
 const Navbar = () => {
   const { theme, setTheme } = useTheme();
@@ -55,9 +50,11 @@ const Navbar = () => {
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
             <div className="flex items-center">
-              <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-500 to-yellow-500 text-transparent bg-clip-text hover:opacity-80 transition-opacity px-2">
-                FitForHire
-              </span>
+              <Link href="/">
+                <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-500 to-yellow-500 text-transparent bg-clip-text hover:opacity-80 transition-opacity px-2">
+                  FitForHire
+                </span>
+              </Link>
             </div>
 
             {/* Desktop Navigation */}
