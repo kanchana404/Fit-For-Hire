@@ -5,7 +5,9 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',
   '/api(.*)',
   '/',           // Home route (not protected)
-  '/home(.*)'     // Additional public route if needed
+  '/home(.*)' ,
+  '/result(.*)'
+      // Additional public route if needed
 ])
 
 export default clerkMiddleware(async (auth, request) => {

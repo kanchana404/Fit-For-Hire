@@ -1,10 +1,12 @@
 "use client";
+
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle, Upload, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import ScanningPopup from "@/components/ScanningPopup";
+import IPLimitDialog from "@/components/IPLimitDialog";
 import { useUploadThing } from "@/utils/uploadthing";
 import { useRouter } from "next/navigation";
 
@@ -13,10 +15,14 @@ const Hero = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string>("");
   const [isScanningPopupOpen, setIsScanningPopupOpen] = useState(false);
-  const [scanningState, setScanningState] = useState<"scanning" | "complete">("scanning");
+  const [scanningState, setScanningState] = useState<"scanning" | "complete">(
+    "scanning"
+  );
+  const [userIP, setUserIP] = useState<string>("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch and log the user's IP address on component mount
+  // Fetch and store the user's IP address on component mount
   useEffect(() => {
     const fetchIPAddress = async () => {
       try {
@@ -26,6 +32,7 @@ const Hero = () => {
         }
         const data = await response.json();
         console.log("User's IP Address:", data.ip);
+        setUserIP(data.ip);
       } catch (err) {
         console.error("Failed to fetch IP address:", err);
       }
@@ -117,22 +124,53 @@ const Hero = () => {
     setFiles(droppedFiles);
   };
 
-  const handleStartAnalysis = () => {
+  const handleStartAnalysis = async () => {
     if (files.length === 0) {
       setError("Please upload a PDF resume first");
+      return;
+    }
+
+    if (!userIP) {
+      setError("Unable to retrieve your IP address. Please try again.");
       return;
     }
 
     setError("");
     setIsScanningPopupOpen(true);
     setScanningState("scanning");
-    startUpload(files);
+
+    try {
+      const response = await fetch("/api/check-ip", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ip: userIP }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        if (result.allowed) {
+          // IP not in DB, proceed with upload
+          startUpload(files);
+        } else {
+          // IP already exists, show dialog
+          setIsScanningPopupOpen(false);
+          setIsDialogOpen(true);
+        }
+      } else {
+        throw new Error(result.message || "An error occurred.");
+      }
+    } catch (err) {
+      console.error("Error checking IP:", err);
+      setError("An error occurred while processing your request.");
+      setIsScanningPopupOpen(false);
+    }
   };
 
   const handlePopupClose = () => {
     setIsScanningPopupOpen(false);
     setScanningState("scanning");
-    
+
     // If scanning is complete, redirect to results page
     if (scanningState === "complete") {
       router.push("/result");
@@ -145,6 +183,7 @@ const Hero = () => {
 
   return (
     <div className="mt-10 relative min-h-[calc(100vh-4rem)] flex items-center">
+      {/* Background Elements */}
       <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-transparent to-yellow-500/10 dark:from-pink-500/5 dark:via-transparent dark:to-yellow-500/5 -z-10" />
       <div className="absolute top-20 right-20 w-96 h-96 bg-pink-500/5 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-20 left-20 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl animate-pulse delay-700" />
@@ -176,6 +215,7 @@ const Hero = () => {
               ))}
             </div>
 
+            {/* File Upload Box */}
             <div
               onClick={handleBoxClick}
               className={cn(
@@ -234,6 +274,7 @@ const Hero = () => {
               </div>
             </div>
 
+            {/* Start Analysis Button */}
             <div className="flex justify-center">
               <Button
                 onClick={handleStartAnalysis}
@@ -254,11 +295,18 @@ const Hero = () => {
         </div>
       </div>
 
+      {/* Scanning Popup */}
       <ScanningPopup
         isOpen={isScanningPopupOpen}
         onClose={handlePopupClose}
         fileName={files[0]?.name || ""}
         scanningState={scanningState}
+      />
+
+      {/* IP Limit Dialog */}
+      <IPLimitDialog 
+        isOpen={isDialogOpen} 
+        onOpenChange={setIsDialogOpen} 
       />
     </div>
   );

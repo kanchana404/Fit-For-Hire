@@ -13,8 +13,10 @@ import {
   Settings,
   LogIn,
   DollarSign,
+  LogOut, // Optional: If you want a separate icon for logout
 } from "lucide-react";
 import Link from "next/link";
+import { SignedIn, SignedOut, SignOutButton } from "@clerk/nextjs";
 
 const Navbar = () => {
   const { theme, setTheme } = useTheme();
@@ -48,9 +50,11 @@ const Navbar = () => {
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
             <div className="flex items-center">
-              <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-500 to-yellow-500 text-transparent bg-clip-text hover:opacity-80 transition-opacity px-2">
-                FitForHire
-              </span>
+              <Link href="/">
+                <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-500 to-yellow-500 text-transparent bg-clip-text hover:opacity-80 transition-opacity px-2">
+                  FitForHire
+                </span>
+              </Link>
             </div>
 
             {/* Desktop Navigation */}
@@ -69,8 +73,9 @@ const Navbar = () => {
               </div>
             </div>
 
-            {/* Desktop Theme Toggle and Sign In */}
+            {/* Desktop Theme Toggle and Auth Buttons */}
             <div className="hidden md:flex items-center space-x-6">
+              {/* Theme Toggle Button */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -81,12 +86,28 @@ const Navbar = () => {
                 <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
               </Button>
 
-              <Button className="relative overflow-hidden group px-6">
-                <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-yellow-500 transition-transform group-hover:scale-105" />
-                <span className="relative flex items-center text-white px-2">
-                  <LogIn className="mr-2 h-4 w-4" /> Sign In
-                </span>
-              </Button>
+              {/* Authentication Buttons */}
+              <SignedIn>
+                <SignOutButton>
+                  <Button className="relative overflow-hidden group px-6">
+                    <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-yellow-500 transition-transform group-hover:scale-105" />
+                    <span className="relative flex items-center text-white px-2">
+                      <LogOut className="mr-2 h-4 w-4" /> Sign Out
+                    </span>
+                  </Button>
+                </SignOutButton>
+              </SignedIn>
+
+              <SignedOut>
+                <Button className="relative overflow-hidden group px-6">
+                  <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-yellow-500 transition-transform group-hover:scale-105" />
+                  <Link href="/sign-in">
+                    <span className="relative flex items-center text-white px-2">
+                      <LogIn className="mr-2 h-4 w-4" /> Sign In
+                    </span>
+                  </Link>
+                </Button>
+              </SignedOut>
             </div>
 
             {/* Mobile Navigation */}
@@ -117,6 +138,7 @@ const Navbar = () => {
                       );
                     })}
                     <div className="pt-6 border-t border-border">
+                      {/* Theme Toggle in Mobile */}
                       <Button
                         variant="ghost"
                         size="sm"
@@ -131,14 +153,29 @@ const Navbar = () => {
                           {theme === "dark" ? "Light" : "Dark"} Mode
                         </span>
                       </Button>
-                      <Button className="relative overflow-hidden group w-full mt-4">
-                        <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-yellow-500 transition-transform group-hover:scale-105" />
-                        <Link href="/sign-in">
-                          <span className="relative flex items-center justify-center text-white p-2">
-                            <LogIn className="mr-2 h-4 w-4" /> Sign In
-                          </span>
-                        </Link>
-                      </Button>
+
+                      {/* Authentication Buttons in Mobile */}
+                      <SignedIn>
+                        <SignOutButton>
+                          <Button className="relative overflow-hidden group w-full mt-4">
+                            <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-yellow-500 transition-transform group-hover:scale-105" />
+                            <span className="relative flex items-center justify-center text-white p-2">
+                              <LogOut className="mr-2 h-4 w-4" /> Sign Out
+                            </span>
+                          </Button>
+                        </SignOutButton>
+                      </SignedIn>
+
+                      <SignedOut>
+                        <Button className="relative overflow-hidden group w-full mt-4">
+                          <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-yellow-500 transition-transform group-hover:scale-105" />
+                          <Link href="/sign-in">
+                            <span className="relative flex items-center justify-center text-white p-2">
+                              <LogIn className="mr-2 h-4 w-4" /> Sign In
+                            </span>
+                          </Link>
+                        </Button>
+                      </SignedOut>
                     </div>
                   </div>
                 </SheetContent>
