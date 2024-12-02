@@ -4,7 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/sonner";
-import { ClerkProvider } from "@clerk/nextjs";
+import { ClerkProvider, UserButton } from "@clerk/nextjs";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -33,7 +33,7 @@ export default function RootLayout({
       <html lang="en" suppressHydrationWarning>
         <head />
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased relative`}
         >
           <ThemeProvider
             attribute="class"
@@ -44,6 +44,11 @@ export default function RootLayout({
             <Navbar />
             {children}
             <Toaster />
+            
+            {/* Persistent UserButton in bottom right corner */}
+            <div className="fixed bottom-4 right-4 z-50">
+              <UserButton afterSignOutUrl="/" />
+            </div>
           </ThemeProvider>
         </body>
       </html>
