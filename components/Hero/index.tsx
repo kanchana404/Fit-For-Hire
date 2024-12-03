@@ -1,3 +1,5 @@
+// components/Hero/index.tsx
+
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -7,11 +9,20 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import ScanningPopup from "@/components/ScanningPopup";
 import IPLimitDialog from "@/components/IPLimitDialog";
+import NoScansLeftDialog from "@/components/NoScansLeftDialog"; // Import the new component
 import { useUploadThing } from "@/utils/uploadthing";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs"; // Import useUser
+
+interface Subscription {
+  plan: "free" | "monthly" | "annual";
+  scans: number | null;
+  // Include other fields as needed
+}
 
 const Hero = () => {
   const router = useRouter();
+  const { isSignedIn } = useUser(); // Removed 'user' as it's not used
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string>("");
   const [isScanningPopupOpen, setIsScanningPopupOpen] = useState(false);
@@ -20,6 +31,9 @@ const Hero = () => {
   );
   const [userIP, setUserIP] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isNoScansLeftDialogOpen, setIsNoScansLeftDialogOpen] = useState(false);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch and store the user's IP address on component mount
@@ -41,21 +55,50 @@ const Hero = () => {
     fetchIPAddress();
   }, []);
 
+  // Fetch the user's subscription if signed in
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      setLoadingSubscription(true);
+      try {
+        const response = await fetch("/api/subscription");
+        const data = await response.json();
+        if (response.ok) {
+          setSubscription(data.subscription);
+        } else {
+          console.error("Error fetching subscription:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching subscription:", error);
+      } finally {
+        setLoadingSubscription(false);
+      }
+    };
+
+    if (isSignedIn) {
+      fetchSubscription();
+    }
+  }, [isSignedIn]);
+
   const { startUpload, isUploading } = useUploadThing("resumeUploader", {
     onClientUploadComplete: async (res) => {
       if (res && res.length > 0) {
         const uploadedUrl = res[0].url;
 
         try {
-          const response = await fetch("http://82.180.162.124:8000/check-ats-friendly", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: uploadedUrl }),
-          });
+          const response = await fetch(
+            "http://82.180.162.124:8000/check-ats-friendly",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ url: uploadedUrl }),
+            }
+          );
 
           if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.detail || "An error occurred during analysis.");
+            throw new Error(
+              errorData.detail || "An error occurred during analysis."
+            );
           }
 
           const data = await response.json();
@@ -63,6 +106,35 @@ const Hero = () => {
           // Store the analysis result and filename in localStorage
           localStorage.setItem("analysisResult", JSON.stringify(data));
           localStorage.setItem("fileName", files[0].name);
+
+          // Decrement scans for signed-in users with limited scans
+          if (
+            isSignedIn &&
+            subscription &&
+            (subscription.plan === "free" || subscription.plan === "monthly")
+          ) {
+            try {
+              const decrementResponse = await fetch("/api/decrement-scans", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
+
+              if (!decrementResponse.ok) {
+                const decrementError = await decrementResponse.text();
+                console.error("Error decrementing scans:", decrementError);
+              } else {
+                const decrementData = await decrementResponse.json();
+                // Update subscription scans in state
+                setSubscription((prev) =>
+                  prev ? { ...prev, scans: decrementData.scans } : prev
+                );
+              }
+            } catch (error) {
+              console.error("Error decrementing scans:", error);
+            }
+          }
 
           // Update scanning state to 'complete'
           setScanningState("complete");
@@ -130,40 +202,74 @@ const Hero = () => {
       return;
     }
 
-    if (!userIP) {
-      setError("Unable to retrieve your IP address. Please try again.");
-      return;
-    }
-
-    setError("");
-    setIsScanningPopupOpen(true);
-    setScanningState("scanning");
-
-    try {
-      const response = await fetch("/api/check-ip", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ip: userIP }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        if (result.allowed) {
-          // IP not in DB, proceed with upload
-          startUpload(files);
-        } else {
-          // IP already exists, show dialog
-          setIsScanningPopupOpen(false);
-          setIsDialogOpen(true);
-        }
-      } else {
-        throw new Error(result.message || "An error occurred.");
+    // If user is signed in
+    if (isSignedIn) {
+      if (loadingSubscription) {
+        setError("Loading subscription information. Please wait.");
+        return;
       }
-    } catch (err) {
-      console.error("Error checking IP:", err);
-      setError("An error occurred while processing your request.");
-      setIsScanningPopupOpen(false);
+
+      if (!subscription) {
+        setError("Subscription information not available.");
+        return;
+      }
+
+      // Check if the user has scans left
+      if (subscription.plan === "annual") {
+        // Unlimited scans, proceed
+      } else if (subscription.scans !== null && subscription.scans > 0) {
+        // Proceed
+      } else {
+        // No scans left, show error message
+        setIsNoScansLeftDialogOpen(true);
+        return;
+      }
+
+      // Proceed with scanning
+
+      setError("");
+      setIsScanningPopupOpen(true);
+      setScanningState("scanning");
+
+      // Start the upload and analysis
+      startUpload(files);
+    } else {
+      // User is not signed in, proceed with IP-based limit (as before)
+      if (!userIP) {
+        setError("Unable to retrieve your IP address. Please try again.");
+        return;
+      }
+
+      setError("");
+      setIsScanningPopupOpen(true);
+      setScanningState("scanning");
+
+      try {
+        const response = await fetch("/api/check-ip", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ip: userIP }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          if (result.allowed) {
+            // IP not in DB, proceed with upload
+            startUpload(files);
+          } else {
+            // IP already exists, show dialog
+            setIsScanningPopupOpen(false);
+            setIsDialogOpen(true);
+          }
+        } else {
+          throw new Error(result.message || "An error occurred.");
+        }
+      } catch (err) {
+        console.error("Error checking IP:", err);
+        setError("An error occurred while processing your request.");
+        setIsScanningPopupOpen(false);
+      }
     }
   };
 
@@ -304,9 +410,12 @@ const Hero = () => {
       />
 
       {/* IP Limit Dialog */}
-      <IPLimitDialog 
-        isOpen={isDialogOpen} 
-        onOpenChange={setIsDialogOpen} 
+      <IPLimitDialog isOpen={isDialogOpen} onOpenChange={setIsDialogOpen} />
+
+      {/* No Scans Left Dialog */}
+      <NoScansLeftDialog
+        isOpen={isNoScansLeftDialogOpen}
+        onOpenChange={setIsNoScansLeftDialogOpen}
       />
     </div>
   );

@@ -9,7 +9,7 @@ export interface IUser extends Document {
   firstName?: string;
   lastName?: string;
   photo?: string;
-  scans: number; // Added scans field
+  // scans: number; // Removed scans field
 }
 
 const UserSchema: Schema<IUser> = new Schema({
@@ -19,7 +19,8 @@ const UserSchema: Schema<IUser> = new Schema({
   firstName: { type: String },
   lastName: { type: String },
   photo: { type: String },
-  scans: { type: Number, default: 3 }, // Added scans field with default value
+  // scans: { type: Number, default: 3 }, // Removed scans field
 });
 
-export const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+export const User: Model<IUser> =
+  mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
