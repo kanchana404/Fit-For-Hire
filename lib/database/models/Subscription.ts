@@ -31,3 +31,8 @@ const SubscriptionSchema: Schema<ISubscription> = new Schema({
 export const Subscription: Model<ISubscription> =
   mongoose.models.Subscription ||
   mongoose.model<ISubscription>('Subscription', SubscriptionSchema);
+
+
+
+
+  //tt
