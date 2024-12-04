@@ -10,10 +10,11 @@ import {
   Sun,
   Home,
   FileText,
-  Settings,
+
   LogIn,
   DollarSign,
-  LogOut, // Optional: If you want a separate icon for logout
+  LogOut,
+  Users, // Added Users icon for Hire option
 } from "lucide-react";
 import Link from "next/link";
 import { SignedIn, SignedOut, SignOutButton } from "@clerk/nextjs";
@@ -25,8 +26,9 @@ const Navbar = () => {
   const navigation = [
     { name: "Home", href: "/", icon: Home },
     { name: "Jobs", href: "/jobs", icon: FileText },
+    { name: "Hire", href: "/hire", icon: Users }, // Added Hire option
     { name: "Pricing", href: "/#pricing", icon: DollarSign },
-    { name: "Settings", href: "/settings", icon: Settings },
+   
   ];
 
   useEffect(() => {
@@ -73,6 +75,7 @@ const Navbar = () => {
               </div>
             </div>
 
+            {/* Rest of the code remains the same */}
             {/* Desktop Theme Toggle and Auth Buttons */}
             <div className="hidden md:flex items-center space-x-6">
               {/* Theme Toggle Button */}
