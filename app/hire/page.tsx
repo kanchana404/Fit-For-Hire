@@ -59,15 +59,7 @@ const JobPostingPage: React.FC = () => {
     setJobData(prev => ({...prev, [field]: value}))
   }, [])
 
-  const addRequirementOrTag = useCallback((field: 'requirements' | 'tags', currentValue: string) => {
-    const trimmedValue = currentValue.trim()
-    if (trimmedValue) {
-      setJobData(prev => ({
-        ...prev,
-        [field]: prev[field] ? `${prev[field]}, ${trimmedValue}` : trimmedValue
-      }))
-    }
-  }, [])
+  
 
   const removeRequirementOrTag = useCallback((field: 'requirements' | 'tags', valueToRemove: string) => {
     setJobData(prev => {
