@@ -21,9 +21,9 @@ type JobData = {
   type: string;
   salary: string;
   description: string;
-  requirements: string;
+  requirements: string[];
   email: string;
-  tags: string;
+  tags: string[];
 }
 
 // Predefined Tags and Job Types
@@ -49,27 +49,36 @@ const JobPostingPage: React.FC = () => {
     type: "", 
     salary: "", 
     description: "", 
-    requirements: "", 
+    requirements: [], 
     email: "", 
-    tags: ""
+    tags: []
   })
+
+  // New state for requirement input
+  const [requirementInput, setRequirementInput] = useState<string>('')
 
   // Utility Functions
   const updateJobData = useCallback((field: keyof JobData, value: string) => {
     setJobData(prev => ({...prev, [field]: value}))
   }, [])
 
-  
-
   const removeRequirementOrTag = useCallback((field: 'requirements' | 'tags', valueToRemove: string) => {
-    setJobData(prev => {
-      const currentValues = prev[field].split(', ').filter(val => val.trim() !== valueToRemove.trim())
-      return {
-        ...prev,
-        [field]: currentValues.join(', ')
-      }
-    })
+    setJobData(prev => ({
+      ...prev,
+      [field]: prev[field].filter(val => val !== valueToRemove)
+    }))
   }, [])
+
+  // New function to add requirement
+  const addRequirement = useCallback(() => {
+    if (requirementInput.trim()) {
+      setJobData(prev => ({
+        ...prev,
+        requirements: [...prev.requirements, requirementInput.trim()]
+      }))
+      setRequirementInput('') // Clear input after adding
+    }
+  }, [requirementInput])
 
   const handleSubmit = useCallback(() => {
     // Validation can be added here
@@ -183,88 +192,90 @@ const JobPostingPage: React.FC = () => {
                   className="mt-2 min-h-[150px]"
                 />
               </div>
+            </div>
+          </div>
 
-              {/* Requirements Section */}
-              <div>
-                <Label className="flex items-center">
-                  <Plus className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  Requirements
-                </Label>
-                <div className="mt-2">
-                  <Textarea 
-                    placeholder="Enter job requirements (comma-separated)" 
-                    value={jobData.requirements}
-                    onChange={(e) => updateJobData('requirements', e.target.value)}
-                    className="mb-2"
-                  />
-                  {jobData.requirements && (
-                    <div className="flex flex-wrap gap-2">
-                      {jobData.requirements.split(',').map((req) => {
-                        const trimmedReq = req.trim()
-                        return trimmedReq ? (
-                          <div 
-                            key={trimmedReq} 
-                            className="bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full text-sm flex items-center"
-                          >
-                            {trimmedReq}
-                            <X 
-                              className="ml-2 h-4 w-4 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" 
-                              onClick={() => removeRequirementOrTag('requirements', trimmedReq)} 
-                            />
-                          </div>
-                        ) : null
-                      })}
-                    </div>
-                  )}
-                </div>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Requirements Section */}
+            <div className='mt-2'>
+              <Label className="flex items-center mb-2">
+                <Plus className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400 " />
+                Requirements
+              </Label>
+              <div className="flex space-x-2 mb-2">
+                <Input 
+                  placeholder="Add a requirement"
+                  value={requirementInput}
+                  onChange={(e) => setRequirementInput(e.target.value)}
+                  className="flex-grow"
+                />
+                <Button 
+                  variant="outline" 
+                  onClick={addRequirement}
+                  disabled={!requirementInput.trim()}
+                >
+                  Add
+                </Button>
               </div>
+              
+              {jobData.requirements.length > 0 && (
+                <ul className="list-none mt-2 space-y-1 text-sm">
+                  {jobData.requirements.map((req) => (
+                    <li 
+                      key={req} 
+                      className="flex items-center"
+                    >
+                      * {req}
+                      <X 
+                        className="ml-2 h-4 w-4 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" 
+                        onClick={() => removeRequirementOrTag('requirements', req)} 
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
-              {/* Tags Section */}
-              <div>
-                <Label className="flex items-center">
-                  <Tag className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  Job Tags
-                </Label>
-                <div className="mt-2">
-                  <Select 
-                    onValueChange={(tag) => {
-                      const updatedTags = jobData.tags 
-                        ? `${jobData.tags}, ${tag}` 
-                        : tag;
-                      updateJobData('tags', updatedTags);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Tags" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {AVAILABLE_TAGS.map((tag) => (
-                        <SelectItem key={tag} value={tag}>{tag}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  {jobData.tags && (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {jobData.tags.split(',').map((tag) => {
-                        const trimmedTag = tag.trim()
-                        return trimmedTag ? (
-                          <div 
-                            key={trimmedTag} 
-                            className="bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full text-sm flex items-center"
-                          >
-                            {trimmedTag}
-                            <X 
-                              className="ml-2 h-4 w-4 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" 
-                              onClick={() => removeRequirementOrTag('tags', trimmedTag)} 
-                            />
-                          </div>
-                        ) : null
-                      })}
+            {/* Tags Section */}
+            <div>
+              <Label className="flex items-center mt-2">
+                <Tag className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                Job Tags
+              </Label>
+              <Select 
+                onValueChange={(tag) => {
+                  const updatedTags = jobData.tags.includes(tag) 
+                    ? jobData.tags 
+                    : [...jobData.tags, tag];
+                  setJobData(prev => ({...prev, tags: updatedTags}));
+                }}
+              >
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Select Tags" />
+                </SelectTrigger>
+                <SelectContent>
+                  {AVAILABLE_TAGS.map((tag) => (
+                    <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {jobData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {jobData.tags.map((tag) => (
+                    <div 
+                      key={tag} 
+                      className="bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full text-sm flex items-center"
+                    >
+                      {tag}
+                      <X 
+                        className="ml-2 h-4 w-4 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" 
+                        onClick={() => removeRequirementOrTag('tags', tag)} 
+                      />
                     </div>
-                  )}
+                  ))}
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -272,7 +283,7 @@ const JobPostingPage: React.FC = () => {
           <div className="mt-6">
             <Button 
               onClick={handleSubmit}
-              className="w-full bg-gradient-to-r from-pink-500 to-yellow-500 hover:from-pink-600 hover:to-yellow-600"
+              className="w-full bg-gradient-to-r from-pink-500 to-yellow-500 hover:from-pink-600 hover:to-yellow-600 text-black dark:text-white"
             >
               Create Job Posting
             </Button>
