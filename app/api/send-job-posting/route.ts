@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     });
 
     // Construct the admin link
-    const adminLink = `http://localhost:3000/admin?jobId=${jobId}`; // Use your actual domain in production
+    const adminLink = `https://fitforhire.kanchanadev.org/admin?jobId=${jobId}`; // Use your actual domain in production
 
     // Construct the email content
     const mailOptions = {
