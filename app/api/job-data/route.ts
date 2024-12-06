@@ -1,22 +1,10 @@
 // app/api/job-data/route.ts
 
 import { NextResponse } from 'next/server';
-
-// Define the JobData type
-type JobData = {
-  title: string;
-  company: string;
-  location: string;
-  type: string;
-  salary: string;
-  description: string;
-  requirements: string[];
-  email: string;
-  tags: string[];
-};
+import { JobData } from '@/types/JobData'; // Adjust the path if necessary
 
 // In-memory store for job postings.
-// Note: For production, consider using a persistent database.
+// Note: Data will be lost when the server restarts.
 const jobDataStore: Record<string, JobData> = {};
 
 /**

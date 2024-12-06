@@ -2,20 +2,12 @@
 
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { JobData } from '@/types/JobData'; // Adjust the path if necessary
 import { storeJobData } from '@/app/api/job-data/route';
+import crypto from 'crypto'; // Ensure crypto is imported
 
 // Define the expected structure of the job data
-type JobData = {
-  title: string;
-  company: string;
-  location: string;
-  type: string;
-  salary: string;
-  description: string;
-  requirements: string[];
-  email: string;
-  tags: string[];
-};
+// Already defined in JobData type
 
 export async function POST(request: Request) {
   try {
@@ -57,7 +49,7 @@ export async function POST(request: Request) {
     });
 
     // Construct the admin link
-    const adminLink = `https://fitforhire.kanchanadev.org/admin?jobId=${jobId}`;
+    const adminLink = `http://localhost:3000/admin?jobId=${jobId}`; // Use your actual domain in production
 
     // Construct the email content
     const mailOptions = {
@@ -85,7 +77,7 @@ Posted By: ${email}
 
 View and manage this job posting:
 ${adminLink}
-`,
+      `,
       html: `
         <h2>New Job Posting Submitted</h2>
         <p><strong>Title:</strong> ${title}</p>

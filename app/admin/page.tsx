@@ -4,22 +4,13 @@
 
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { JobData } from '@/types/JobData'; // Ensure the path is correct
 
-type JobData = {
-  title: string;
-  company: string;
-  location: string;
-  type: string;
-  salary: string;
-  description: string;
-  requirements: string[];
-  email: string;
-  tags: string[];
-};
+export const dynamic = 'force-dynamic'; // Prevents prerendering
 
 const AdminPage = () => {
   const [jobData, setJobData] = useState<JobData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const searchParams = useSearchParams();
   const jobId = searchParams.get("jobId");
 

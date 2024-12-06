@@ -23,19 +23,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner"; // Ensure 'sonner' is installed and set up
-
-// Type Definitions
-type JobData = {
-  title: string;
-  company: string;
-  location: string;
-  type: string;
-  salary: string;
-  description: string;
-  requirements: string[];
-  email: string;
-  tags: string[];
-};
+import { JobData } from '@/types/JobData'; // Import the JobData type
 
 // Predefined Tags and Job Types
 const AVAILABLE_TAGS = [
@@ -118,7 +106,7 @@ const JobPostingPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Send POST request to the new API route
+      // Send POST request to the send-job-posting API route
       const response = await axios.post("/api/send-job-posting", jobData);
 
       if (response.status === 200) {
