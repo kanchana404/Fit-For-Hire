@@ -2,6 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { storeJobData } from '@/app/api/job-data/route';
 
 // Define the expected structure of the job data
 type JobData = {
@@ -40,6 +41,12 @@ export async function POST(request: Request) {
       );
     }
 
+    // Generate a unique jobId
+    const jobId = crypto.randomUUID();
+
+    // Store the job data in our in-memory store
+    storeJobData(jobId, jobData);
+
     // Configure the transporter with environment variables
     const transporter = nodemailer.createTransport({
       service: 'Gmail',
@@ -48,6 +55,9 @@ export async function POST(request: Request) {
         pass: process.env.APP_PASSWORD, // Your Gmail App Password
       },
     });
+
+    // Construct the admin link
+    const adminLink = `https://fitforhire.kanchanadev.org/admin?jobId=${jobId}`;
 
     // Construct the email content
     const mailOptions = {
@@ -72,7 +82,10 @@ ${requirements.map((req, idx) => `${idx + 1}. ${req}`).join('\n')}
 Tags: ${tags.join(', ')}
 
 Posted By: ${email}
-      `,
+
+View and manage this job posting:
+${adminLink}
+`,
       html: `
         <h2>New Job Posting Submitted</h2>
         <p><strong>Title:</strong> ${title}</p>
@@ -88,6 +101,7 @@ Posted By: ${email}
         </ul>
         <p><strong>Tags:</strong> ${tags.join(', ')}</p>
         <p><strong>Posted By:</strong> ${email}</p>
+        <p><a href="${adminLink}" target="_blank">View in Admin</a></p>
       `,
     };
 
