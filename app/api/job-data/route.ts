@@ -1,33 +1,53 @@
 // app/api/job-data/route.ts
+import { connectToDatabase } from '@/lib/database';
+import { HireApplication } from '@/lib/database/models/HireApplication';
+import { currentUser } from '@clerk/nextjs/server'
 
 import { NextResponse } from 'next/server';
-import { JobData } from '@/types/JobData'; // Adjust the path if necessary
 
-// In-memory store for job postings.
-// Note: Data will be lost when the server restarts.
-const jobDataStore: Record<string, JobData> = {};
+const AUTHORIZED_USER_ID = "user_2phMQ0jMweuG1r3t18YySLXCf4A";
 
-/**
- * Stores job data in the in-memory store.
- * @param jobId - Unique identifier for the job posting.
- * @param data - The job data to store.
- */
-export function storeJobData(jobId: string, data: JobData) {
-  jobDataStore[jobId] = data;
-}
-
-/**
- * Retrieves job data based on the provided jobId.
- * @param request - The incoming request containing query parameters.
- * @returns A JSON response with the job data or an error message.
- */
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const jobId = searchParams.get('jobId');
+  try {
+    const user = await currentUser();
 
-  if (!jobId || !jobDataStore[jobId]) {
-    return NextResponse.json({ message: 'Job not found' }, { status: 404 });
+    if (!user || user.id !== AUTHORIZED_USER_ID) {
+      return NextResponse.json(
+        { message: 'Unauthorized access.' },
+        { status: 403 }
+      );
+    }
+
+    const url = new URL(request.url);
+    const jobId = url.searchParams.get('jobId');
+
+    if (!jobId) {
+      return NextResponse.json(
+        { message: 'Job ID is required.' },
+        { status: 400 }
+      );
+    }
+
+    await connectToDatabase();
+
+    const jobApplication = await HireApplication.findOne({ jobId });
+
+    if (!jobApplication) {
+      return NextResponse.json(
+        { message: 'Job not found.' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      { jobData: jobApplication },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('Error fetching job data:', error instanceof Error ? error.message : error);
+    return NextResponse.json(
+      { message: 'Failed to fetch job data.', error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({ jobData: jobDataStore[jobId] }, { status: 200 });
 }

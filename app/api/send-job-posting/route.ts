@@ -1,16 +1,21 @@
 // app/api/send-job-posting/route.ts
 
-import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
-import { JobData } from '@/types/JobData'; // Adjust the path if necessary
-import { storeJobData } from '@/app/api/job-data/route';
-import crypto from 'crypto'; // Ensure crypto is imported
+import { NextResponse } from "next/server";
+import nodemailer from "nodemailer";
+import { JobData } from "@/types/JobData";
 
-// Define the expected structure of the job data
-// Already defined in JobData type
+import crypto from "crypto";
+import { connectToDatabase } from "@/lib/database";
+import { HireApplication } from "@/lib/database/models/HireApplication";
+// Removed import for storeJobData as it's undefined
 
 export async function POST(request: Request) {
   try {
+    await connectToDatabase();
+
+    // Assuming you have some form of user authentication, which is currently not implemented
+    // If you do, handle user authentication here
+
     const jobData: JobData = await request.json();
 
     const {
@@ -25,59 +30,46 @@ export async function POST(request: Request) {
       tags,
     } = jobData;
 
-    // Basic validation
     if (!title || !company || !email) {
       return NextResponse.json(
-        { message: 'Missing required fields: title, company, or email.' },
+        { message: "Missing required fields: title, company, or email." },
         { status: 400 }
       );
     }
 
-    // Generate a unique jobId
     const jobId = crypto.randomUUID();
 
-    // Store the job data in our in-memory store
-    storeJobData(jobId, jobData);
+    // Create a new HireApplication document
+    const hireApplication = new HireApplication({
+      jobId,
+      title,
+      company,
+      location,
+      type,
+      salary,
+      description,
+      requirements,
+      email,
+      tags,
+      userId: "unknown", // Since authentication is removed, set a default or handle accordingly
+    });
 
-    // Configure the transporter with environment variables
+    await hireApplication.save();
+
     const transporter = nodemailer.createTransport({
-      service: 'Gmail',
+      service: "Gmail",
       auth: {
-        user: process.env.APP_EMAIL, // Your Gmail address
-        pass: process.env.APP_PASSWORD, // Your Gmail App Password
+        user: process.env.APP_EMAIL,
+        pass: process.env.APP_PASSWORD,
       },
     });
 
-    // Construct the admin link
-    const adminLink = `https://fitforhire.kanchanadev.org/admin?jobId=${jobId}`; // Use your actual domain in production
+    const adminLink = `http://localhost:3000/admin?jobId=${jobId}`;
 
-    // Construct the email content
     const mailOptions = {
       from: `"Job Posting Form" <${process.env.APP_EMAIL}>`,
-      to: 'kanchanakavitha6@gmail.com', // Recipient email
+      to: "kanchanakavitha6@gmail.com",
       subject: `New Job Posting: ${title} at ${company}`,
-      text: `
-Job Posting Details:
-
-Title: ${title}
-Company: ${company}
-Location: ${location}
-Type: ${type}
-Salary: ${salary}
-
-Description:
-${description}
-
-Requirements:
-${requirements.map((req, idx) => `${idx + 1}. ${req}`).join('\n')}
-
-Tags: ${tags.join(', ')}
-
-Posted By: ${email}
-
-View and manage this job posting:
-${adminLink}
-      `,
       html: `
         <h2>New Job Posting Submitted</h2>
         <p><strong>Title:</strong> ${title}</p>
@@ -89,22 +81,30 @@ ${adminLink}
         <p>${description}</p>
         <h3>Requirements:</h3>
         <ul>
-          ${requirements.map((req) => `<li>${req}</li>`).join('')}
+          ${requirements.map((req) => `<li>${req}</li>`).join("")}
         </ul>
-        <p><strong>Tags:</strong> ${tags.join(', ')}</p>
+        <p><strong>Tags:</strong> ${tags.join(", ")}</p>
         <p><strong>Posted By:</strong> ${email}</p>
         <p><a href="${adminLink}" target="_blank">View in Admin</a></p>
       `,
     };
 
-    // Send the email
     await transporter.sendMail(mailOptions);
 
-    return NextResponse.json({ message: 'Job posting sent successfully!' }, { status: 200 });
-  } catch (error) {
-    console.error('Error sending job posting email:', error instanceof Error ? error.message : error);
     return NextResponse.json(
-      { message: 'Failed to send job posting.', error: error instanceof Error ? error.message : 'Unknown error' },
+      { message: "Job posting submitted and email sent successfully!" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error(
+      "Error submitting job posting:",
+      error instanceof Error ? error.message : error
+    );
+    return NextResponse.json(
+      {
+        message: "Failed to submit job posting.",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
