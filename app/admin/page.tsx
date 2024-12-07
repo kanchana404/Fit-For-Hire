@@ -2,32 +2,68 @@
 
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Briefcase,
+  MapPin,
+  DollarSign,
+  Tag,
+  Plus,
+} from "lucide-react";
 import { JobData } from '@/types/JobData';
-import { MapPin, BriefcaseBusiness, Tag, DollarSign, UserCheck } from 'lucide-react';
 
-const JobPostingPage = () => {
+// You can keep the existing constants if needed
+const JOB_TYPES = [
+  { value: "full-time", label: "Full-time" },
+  { value: "part-time", label: "Part-time" },
+  { value: "contract", label: "Contract" },
+  { value: "remote", label: "Remote" },
+];
+
+const JobPostingDetailsPage: React.FC = () => {
   const [jobData, setJobData] = useState<JobData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const jobId = searchParams.get("jobId");
 
   useEffect(() => {
     const fetchData = async () => {
+      // Check if jobId is not provided
       if (!jobId) {
+        setError("No Job ID Provided. Please use the correct link.");
         setLoading(false);
         return;
       }
 
       try {
         const response = await fetch(`/api/job-data?jobId=${jobId}`);
+        
         if (!response.ok) {
+          // Handle API errors
+          if (response.status === 404) {
+            setError("Job not found. The job may have been removed or does not exist.");
+          } else {
+            setError("An error occurred while fetching job details.");
+          }
           setJobData(null);
         } else {
           const data = await response.json();
           setJobData(data.jobData);
+          setError(null);
         }
       } catch (error) {
         console.error("Error fetching job data:", error);
+        setError("Network error. Please check your connection and try again.");
         setJobData(null);
       } finally {
         setLoading(false);
@@ -37,31 +73,35 @@ const JobPostingPage = () => {
     fetchData();
   }, [jobId]);
 
+  // Loading state
   if (loading) {
     return (
       <div className="relative min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+        <p className="text-xl">Loading job details...</p>
       </div>
     );
   }
 
-  if (!jobId) {
+  // Error state
+  if (error) {
     return (
       <div className="relative min-h-screen flex items-center">
+        {/* Background Elements */}
         <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-transparent to-yellow-500/10 dark:from-pink-500/5 dark:via-transparent dark:to-yellow-500/5 -z-10" />
         <div className="absolute top-20 right-20 w-96 h-96 bg-pink-500/5 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-20 left-20 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl animate-pulse delay-700" />
         
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-md mx-auto bg-white/85 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-white/10">
-            <h1 className="text-3xl font-bold text-gray-800 mb-4">No Job ID Provided</h1>
-            <p className="mt-2 text-gray-600">Please use the link provided in the email to access the job details.</p>
+            <h1 className="text-3xl font-bold text-red-600 mb-4">Error</h1>
+            <p className="mt-2 text-gray-600">{error}</p>
           </div>
         </div>
       </div>
     );
   }
 
+  // If no job data is available after error checking
   if (!jobData) {
     return (
       <div className="relative min-h-screen flex items-center">
@@ -71,102 +111,171 @@ const JobPostingPage = () => {
         
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-md mx-auto bg-white/85 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-white/10">
-            <h1 className="text-3xl font-bold text-gray-800 mb-4">Job Not Found</h1>
-            <p className="mt-2 text-gray-600">The job you are looking for does not exist or has been removed.</p>
+            <h1 className="text-3xl font-bold text-red-600 mb-4">Job Not Found</h1>
+            <p className="mt-2 text-gray-600">Unable to retrieve job details. Please try again later.</p>
           </div>
         </div>
       </div>
     );
   }
 
+  // Render job details (same as previous implementation)
   return (
-    <div className="relative min-h-screen flex items-center">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-transparent to-yellow-500/10 dark:from-pink-500/5 dark:via-transparent dark:to-yellow-500/5 -z-10" />
+    <div className="relative min-h-screen flex items-center bg-background mt-9">
+      {/* Background Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-transparent to-yellow-500/10 -z-10" />
+
+      {/* Animated Blur Circles */}
       <div className="absolute top-20 right-20 w-96 h-96 bg-pink-500/5 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-20 left-20 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl animate-pulse delay-700" />
 
       <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto bg-white/85 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-white/10">
-          {/* Job Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-              {jobData.title}
+        <div className="max-w-4xl mx-auto bg-card/80 backdrop-blur-sm p-8 rounded-xl shadow-2xl border border-white/10">
+          <div className="text-center mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+              Job Posting
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-yellow-500 ml-2">
+                Details
+              </span>
             </h1>
-            <div className="flex justify-center items-center space-x-4 text-gray-600">
-              <div className="flex items-center space-x-2">
-                <BriefcaseBusiness className="w-5 h-5" />
-                <span>{jobData.company}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <MapPin className="w-5 h-5" />
-                <span>{jobData.location}</span>
-              </div>
-            </div>
           </div>
 
-          {/* Job Details Grid */}
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center space-x-4">
-              <BriefcaseBusiness className="w-6 h-6 text-pink-500" />
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="space-y-4">
               <div>
-                <h3 className="font-semibold text-gray-700">Job Type</h3>
-                <p className="text-gray-600">{jobData.type}</p>
+                <Label className="flex items-center">
+                  <Briefcase className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Job Title
+                </Label>
+                <Input
+                  value={jobData.title}
+                  readOnly
+                  className="mt-2 bg-gray-100 cursor-default"
+                />
               </div>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center space-x-4">
-              <DollarSign className="w-6 h-6 text-yellow-500" />
+
               <div>
-                <h3 className="font-semibold text-gray-700">Salary</h3>
-                <p className="text-gray-600">{jobData.salary}</p>
+                <Label className="flex items-center">
+                  <Briefcase className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Company
+                </Label>
+                <Input
+                  value={jobData.company}
+                  readOnly
+                  className="mt-2 bg-gray-100 cursor-default"
+                />
+              </div>
+
+              <div>
+                <Label className="flex items-center">
+                  <MapPin className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Location
+                </Label>
+                <Input
+                  value={jobData.location}
+                  readOnly
+                  className="mt-2 bg-gray-100 cursor-default"
+                />
+              </div>
+
+              <div>
+                <Label className="flex items-center">
+                  <DollarSign className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Salary Range
+                </Label>
+                <Input
+                  value={jobData.salary}
+                  readOnly
+                  className="mt-2 bg-gray-100 cursor-default"
+                />
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-4">
+              <div>
+                <Label className="flex items-center">
+                  <Briefcase className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Job Type
+                </Label>
+                <Select value={jobData.type} disabled>
+                  <SelectTrigger className="mt-2 bg-gray-100 cursor-default">
+                    <SelectValue placeholder={jobData.type} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {JOB_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Job Description</Label>
+                <Textarea
+                  value={jobData.description}
+                  readOnly
+                  className="mt-2 min-h-[150px] bg-gray-100 cursor-default"
+                />
               </div>
             </div>
           </div>
 
-          {/* Description */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Job Description</h2>
-            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-              {jobData.description}
-            </p>
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Requirements Section */}
+            <div className="mt-2">
+              <Label className="flex items-center mb-2">
+                <Plus className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400 " />
+                Requirements
+              </Label>
 
-          {/* Requirements */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Requirements</h2>
-            <ul className="list-disc list-inside text-gray-700 space-y-2">
-              {jobData.requirements.map((req, i) => (
-                <li key={i} className="pl-2">{req}</li>
-              ))}
-            </ul>
-          </div>
+              {jobData.requirements.length > 0 && (
+                <ul className="list-none mt-2 space-y-1 text-sm">
+                  {jobData.requirements.map((req) => (
+                    <li
+                      key={req}
+                      className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"
+                    >
+                      <span>* {req}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
-          {/* Tags */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-              <Tag className="w-6 h-6 mr-2 text-green-500" />
-              Job Tags
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {jobData.tags.map((tag, i) => (
-                <span 
-                  key={i} 
-                  className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
-                >
-                  {tag}
-                </span>
-              ))}
+            {/* Tags Section */}
+            <div>
+              <Label className="flex items-center mt-2">
+                <Tag className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                Job Tags
+              </Label>
+
+              {jobData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {jobData.tags.map((tag) => (
+                    <div
+                      key={tag}
+                      className="bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full text-sm flex items-center"
+                    >
+                      {tag}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Apply Button */}
-          <div className="text-center">
-            <button 
-              className="bg-gradient-to-r from-pink-500 to-yellow-500 text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center mx-auto space-x-2"
-            >
-              <UserCheck className="w-5 h-5" />
-              <span>Apply Now</span>
-            </button>
+          {/* Email Input */}
+          <div className="mt-4">
+            <Label>Contact Email</Label>
+            <Input
+              value={jobData.email}
+              readOnly
+              className="mt-2 bg-gray-100 cursor-default"
+            />
           </div>
         </div>
       </div>
@@ -174,4 +283,4 @@ const JobPostingPage = () => {
   );
 };
 
-export default JobPostingPage;
+export default JobPostingDetailsPage;
