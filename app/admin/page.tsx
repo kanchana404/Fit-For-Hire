@@ -145,7 +145,7 @@ const JobPostingDetailsPage: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <Label className="flex items-center">
-                  <Briefcase className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <Briefcase className="mr-2 h-4 w-4 text-black" />
                   Job Title
                 </Label>
                 <Input
@@ -157,7 +157,7 @@ const JobPostingDetailsPage: React.FC = () => {
 
               <div>
                 <Label className="flex items-center">
-                  <Briefcase className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <Briefcase className="mr-2 h-4 w-4 text-black" />
                   Company
                 </Label>
                 <Input
@@ -169,7 +169,7 @@ const JobPostingDetailsPage: React.FC = () => {
 
               <div>
                 <Label className="flex items-center">
-                  <MapPin className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <MapPin className="mr-2 h-4 w-4 text-black " />
                   Location
                 </Label>
                 <Input
@@ -181,7 +181,7 @@ const JobPostingDetailsPage: React.FC = () => {
 
               <div>
                 <Label className="flex items-center">
-                  <DollarSign className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <DollarSign className="mr-2 h-4 w-4 text-black" />
                   Salary Range
                 </Label>
                 <Input
@@ -196,7 +196,7 @@ const JobPostingDetailsPage: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <Label className="flex items-center">
-                  <Briefcase className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <Briefcase className="mr-2 h-4 w-4 text-black" />
                   Job Type
                 </Label>
                 <Select value={jobData.type} disabled>
@@ -228,7 +228,7 @@ const JobPostingDetailsPage: React.FC = () => {
             {/* Requirements Section */}
             <div className="mt-2">
               <Label className="flex items-center mb-2">
-                <Plus className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400 " />
+                <Plus className="mr-2 h-4 w-4 text-black " />
                 Requirements
               </Label>
 
@@ -249,7 +249,7 @@ const JobPostingDetailsPage: React.FC = () => {
             {/* Tags Section */}
             <div>
               <Label className="flex items-center mt-2">
-                <Tag className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <Tag className="mr-2 h-4 w-4 text-black" />
                 Job Tags
               </Label>
 
