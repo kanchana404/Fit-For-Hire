@@ -1,4 +1,5 @@
 // models/Job.ts
+
 import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IJob extends Document {

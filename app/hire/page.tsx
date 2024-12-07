@@ -13,17 +13,10 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  X,
-  Plus,
-  Briefcase,
-  MapPin,
-  DollarSign,
-  Tag,
-} from "lucide-react";
+import { X, Plus, Briefcase, MapPin, DollarSign, Tag } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner"; // Ensure 'sonner' is installed and set up
-import { JobData } from '@/types/JobData'; // Import the JobData type
+import { JobData } from "@/types/JobData"; // Import the JobData type
 
 // Predefined Tags and Job Types
 const AVAILABLE_TAGS = [
@@ -53,6 +46,7 @@ const JOB_TYPES = [
 const JobPostingPage: React.FC = () => {
   // State Management
   const [jobData, setJobData] = useState<JobData>({
+    jobId: "",
     title: "",
     company: "",
     location: "",
@@ -62,6 +56,7 @@ const JobPostingPage: React.FC = () => {
     requirements: [],
     email: "",
     tags: [],
+    status: "review", // provide a default status
   });
 
   // New state for requirement input
@@ -113,6 +108,7 @@ const JobPostingPage: React.FC = () => {
         toast.success("Job posting sent successfully!");
         // Optionally, reset the form
         setJobData({
+          jobId: "",
           title: "",
           company: "",
           location: "",
@@ -122,6 +118,7 @@ const JobPostingPage: React.FC = () => {
           requirements: [],
           email: "",
           tags: [],
+          status: "review", // provide a default status
         });
       } else {
         toast.error("Failed to send job posting.");
@@ -217,9 +214,7 @@ const JobPostingPage: React.FC = () => {
                   <Briefcase className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
                   Job Type
                 </Label>
-                <Select
-                  onValueChange={(value) => updateJobData("type", value)}
-                >
+                <Select onValueChange={(value) => updateJobData("type", value)}>
                   <SelectTrigger className="mt-2">
                     <SelectValue placeholder="Select Job Type" />
                   </SelectTrigger>
@@ -278,7 +273,9 @@ const JobPostingPage: React.FC = () => {
                       <span>* {req}</span>
                       <X
                         className="ml-2 h-4 w-4 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                        onClick={() => removeRequirementOrTag("requirements", req)}
+                        onClick={() =>
+                          removeRequirementOrTag("requirements", req)
+                        }
                       />
                     </li>
                   ))}
