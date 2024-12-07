@@ -1,8 +1,9 @@
 // app/jobs/page.tsx
 
 "use client";
+
 import React, { useState, useMemo, useEffect } from "react";
-import { Command, CommandInput } from "@/components/ui/command";
+import { Input } from "@/components/ui/input"; // Replaced CommandInput with Input
 import {
   Card,
   CardContent,
@@ -26,7 +27,7 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
-import { jobs as allJobs, Job } from "@/constants";
+import { jobs as allJobs, Job } from "@/constants"; // Ensure this import is correct
 import { Pagination } from "@/components/ui/pagination";
 import JobApplicationPopup from "@/components/JobApplicationPopup";
 import { Toaster } from "@/components/ui/sonner";
@@ -34,15 +35,31 @@ import { Toaster } from "@/components/ui/sonner";
 const ITEMS_PER_PAGE = 5;
 
 const JobListings = () => {
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [jobType, setJobType] = useState("All");
   const [mounted, setMounted] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
+  // Debug: Log allJobs to ensure data is correctly imported
+  useEffect(() => {
+    console.log("All Jobs Data:", allJobs);
+    console.log("Type of allJobs:", Array.isArray(allJobs));
+  }, []);
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Debounce search input to optimize performance
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setSearchQuery(searchInput);
+    }, 300); // Debounce delay of 300ms
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchInput]);
 
   const filteredJobs = useMemo(() => {
     return allJobs.filter((job) => {
@@ -67,6 +84,13 @@ const JobListings = () => {
     return filteredJobs.slice(start, start + ITEMS_PER_PAGE);
   }, [currentPage, filteredJobs]);
 
+  // Debug: Log filteredJobs to verify filtering
+  useEffect(() => {
+    console.log("Search Query:", searchQuery);
+    console.log("Job Type:", jobType);
+    console.log("Filtered Jobs:", filteredJobs);
+  }, [searchQuery, jobType, filteredJobs]);
+
   const handleApplyNow = (job: Job) => {
     setSelectedJob(job);
   };
@@ -83,7 +107,6 @@ const JobListings = () => {
       <Toaster />
 
       {/* Background elements */}
-
       <div className="container mx-auto px-4 py-12">
         {/* Search and Filters */}
         <div className="max-w-4xl mx-auto mb-12">
@@ -96,14 +119,13 @@ const JobListings = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="col-span-2">
-              <Command className="rounded-lg border shadow-md backdrop-blur-sm bg-background/80">
-                <CommandInput
-                  placeholder="Search jobs..."
-                  value={searchQuery}
-                  onValueChange={setSearchQuery}
-                  className="h-12"
-                />
-              </Command>
+              {/* Replaced CommandInput with Input */}
+              <Input
+                placeholder="Search jobs..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="h-12"
+              />
             </div>
 
             <Select value={jobType} onValueChange={setJobType}>
