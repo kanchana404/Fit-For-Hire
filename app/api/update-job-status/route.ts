@@ -3,10 +3,11 @@
 import { connectToDatabase } from '@/lib/database';
 import { ApplicationStatus, HireApplication } from '@/lib/database/models/HireApplication';
 import { Job } from '@/lib/database/models/Job';
-import { currentUser } from '@clerk/nextjs/server'
+import { User } from '@/lib/database/models/User'; // Import User model
+import { currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
-const AUTHORIZED_USER_ID = "user_2phMQ0jMweuG1r3t18YySLXCf4A";
+const AUTHORIZED_USER_ID = process.env.AUTHORIZED_USER_ID || "user_2phMQ0jMweuG1r3t18YySLXCf4A"; // Use environment variable
 
 export interface UpdateStatusPayload {
   jobId: string;
@@ -18,6 +19,7 @@ export async function POST(request: Request) {
     const user = await currentUser();
 
     if (!user || user.id !== AUTHORIZED_USER_ID) {
+      console.warn(`Unauthorized access attempt by user ID: ${user?.id}`);
       return NextResponse.json(
         { message: 'Unauthorized access.' },
         { status: 403 }
@@ -30,6 +32,7 @@ export async function POST(request: Request) {
     const { jobId, status } = payload;
 
     if (!jobId || !status) {
+      console.warn(`Invalid payload: ${JSON.stringify(payload)}`);
       return NextResponse.json(
         { message: 'Job ID and status are required.' },
         { status: 400 }
@@ -39,6 +42,7 @@ export async function POST(request: Request) {
     // Validate status
     const validStatuses: ApplicationStatus[] = ['published', 'review', 'reject'];
     if (!validStatuses.includes(status)) {
+      console.warn(`Invalid status value: ${status}`);
       return NextResponse.json(
         { message: 'Invalid status value.' },
         { status: 400 }
@@ -46,11 +50,13 @@ export async function POST(request: Request) {
     }
 
     await connectToDatabase();
+    console.log(`Connected to the database for updating job status.`);
 
     // Find the job application
     const jobApplication = await HireApplication.findOne({ jobId });
 
     if (!jobApplication) {
+      console.warn(`Job application not found for jobId: ${jobId}`);
       return NextResponse.json(
         { message: 'Job application not found.' },
         { status: 404 }
@@ -60,12 +66,29 @@ export async function POST(request: Request) {
     // Update the status
     jobApplication.status = status;
     await jobApplication.save();
+    console.log(`Updated job status to ${status} for jobId: ${jobId}`);
 
     // If status is 'published', insert into Job collection
     if (status === 'published') {
-      const existingJob = await Job.findOne({ title: jobApplication.title, company: jobApplication.company });
+      // Find the User based on jobApplication.email
+      const userRecord = await User.findOne({ email: jobApplication.email });
+
+      if (!userRecord) {
+        console.error(`User with email ${jobApplication.email} not found.`);
+        return NextResponse.json(
+          { message: 'User associated with this application not found.' },
+          { status: 404 }
+        );
+      }
+
+      console.log(`Found user with email ${jobApplication.email}: ${userRecord.clerkId}`);
+
+      // Check if Job already exists
+      const existingJob = await Job.findOne({ jobId: jobApplication.jobId });
+
       if (!existingJob) {
         const newJob = new Job({
+          jobId: jobApplication.jobId,
           title: jobApplication.title,
           company: jobApplication.company,
           location: jobApplication.location,
@@ -73,12 +96,22 @@ export async function POST(request: Request) {
           salary: jobApplication.salary,
           description: jobApplication.description,
           requirements: jobApplication.requirements,
-          posted: jobApplication.userId,
+          posted: userRecord.clerkId, // Set to User's clerkId
           tags: jobApplication.tags,
           email: jobApplication.email,
+          postedAt: new Date(), // Set to current time
         });
 
-        await newJob.save();
+        try {
+          await newJob.save();
+          console.log(`New job created in Job collection with jobId: ${jobId}`);
+        } catch (saveError) {
+          console.error(`Failed to save new job: ${saveError instanceof Error ? saveError.message : saveError}`);
+          return NextResponse.json(
+            { message: 'Failed to create job in Job collection.', error: saveError instanceof Error ? saveError.message : 'Unknown error' },
+            { status: 500 }
+          );
+        }
       } else {
         console.log('Job already exists in the Job collection.');
       }

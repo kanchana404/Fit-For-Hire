@@ -1,8 +1,9 @@
 // app/jobs/page.tsx
 
 "use client";
+
 import React, { useState, useMemo, useEffect } from "react";
-import { Command, CommandInput } from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -26,24 +27,72 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
-import { jobs as allJobs, Job } from "@/constants";
 import { Pagination } from "@/components/ui/pagination";
 import JobApplicationPopup from "@/components/JobApplicationPopup";
 import { Toaster } from "@/components/ui/sonner";
+import axios from "axios";
+import { formatDistanceToNow } from "date-fns"; // Import date-fns
+
+// Define the Job interface based on your Mongoose schema
+interface Job {
+  _id: string;
+  jobId: string;
+  title: string;
+  company: string;
+  location: string;
+  type: string;
+  salary: string;
+  description: string;
+  requirements: string[];
+  posted: string;
+  tags: string[];
+  email: string;
+  postedAt: string; // ISO string representation of Date
+}
 
 const ITEMS_PER_PAGE = 5;
 
 const JobListings = () => {
+  // State variables for search and filter
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [jobType, setJobType] = useState("All");
-  const [mounted, setMounted] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
+  // State variables for jobs, loading, and error
+  const [allJobs, setAllJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch jobs from the API when the component mounts
   useEffect(() => {
-    setMounted(true);
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get<Job[]>("/api/jobs");
+        setAllJobs(response.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching jobs:", err);
+        setError("Failed to fetch jobs.");
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
   }, []);
 
+  // Debounce search input to optimize performance
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setSearchQuery(searchInput);
+    }, 300); // Debounce delay of 300ms
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchInput]);
+
+  // Filter jobs based on search query and job type
   const filteredJobs = useMemo(() => {
     return allJobs.filter((job) => {
       const matchesSearch =
@@ -56,34 +105,35 @@ const JobListings = () => {
 
       return matchesSearch && matchesType;
     });
-  }, [searchQuery, jobType]);
+  }, [searchQuery, jobType, allJobs]);
 
+  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, jobType]);
 
+  // Paginate the filtered jobs
   const paginatedJobs = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredJobs.slice(start, start + ITEMS_PER_PAGE);
   }, [currentPage, filteredJobs]);
 
+  // Handle "Apply Now" button click
   const handleApplyNow = (job: Job) => {
     setSelectedJob(job);
   };
 
+  // Handle popup close
   const handleClosePopup = () => {
     setSelectedJob(null);
   };
 
-  if (!mounted) return null;
-
   return (
     <div className="mt-10 relative min-h-screen bg-background transition-colors duration-300">
-      {/* Include the Toaster component */}
+      {/* Toaster for notifications */}
       <Toaster />
 
-      {/* Background elements */}
-
+      {/* Main container */}
       <div className="container mx-auto px-4 py-12">
         {/* Search and Filters */}
         <div className="max-w-4xl mx-auto mb-12">
@@ -96,14 +146,12 @@ const JobListings = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="col-span-2">
-              <Command className="rounded-lg border shadow-md backdrop-blur-sm bg-background/80">
-                <CommandInput
-                  placeholder="Search jobs..."
-                  value={searchQuery}
-                  onValueChange={setSearchQuery}
-                  className="h-12"
-                />
-              </Command>
+              <Input
+                placeholder="Search jobs..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="h-12"
+              />
             </div>
 
             <Select value={jobType} onValueChange={setJobType}>
@@ -123,19 +171,27 @@ const JobListings = () => {
 
         {/* Job Listings */}
         <div className="max-w-4xl mx-auto space-y-6">
-          {paginatedJobs.length === 0 ? (
+          {loading ? (
+            <p className="text-center text-lg">Loading jobs...</p>
+          ) : error ? (
+            <Card className="p-8 text-center backdrop-blur-sm bg-background/80 border-pink-500/20">
+              <CardContent>
+                <p className="text-muted-foreground text-lg">{error}</p>
+              </CardContent>
+            </Card>
+          ) : filteredJobs.length === 0 ? (
             <Card className="p-8 text-center backdrop-blur-sm bg-background/80 border-pink-500/20">
               <CardContent>
                 <p className="text-muted-foreground text-lg">
-                  No jobs found matching your search criteria. Try adjusting
-                  your filters.
+                  No jobs found matching your search criteria. Try adjusting your
+                  filters.
                 </p>
               </CardContent>
             </Card>
           ) : (
             paginatedJobs.map((job) => (
               <Card
-                key={job.id}
+                key={job._id}
                 className="group hover:shadow-lg transition-all duration-200 backdrop-blur-sm bg-background/80 border-pink-500/20 hover:border-pink-500/40"
               >
                 <CardHeader>
@@ -144,9 +200,7 @@ const JobListings = () => {
                       <CardTitle className="text-2xl mb-2 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-yellow-500">
                         {job.title}
                       </CardTitle>
-                      <p className="text-lg text-muted-foreground">
-                        {job.company}
-                      </p>
+                      <p className="text-lg text-muted-foreground">{job.company}</p>
                     </div>
                     <Button
                       onClick={() => handleApplyNow(job)}
@@ -174,7 +228,8 @@ const JobListings = () => {
                     </div>
                     <div className="flex items-center">
                       <Clock className="w-4 h-4 mr-2 text-pink-500" />
-                      {job.posted}
+                      {/* Display relative time since postedAt */}
+                      {formatDistanceToNow(new Date(job.postedAt), { addSuffix: true })}
                     </div>
                   </div>
 
@@ -183,7 +238,7 @@ const JobListings = () => {
                   <div className="space-y-2">
                     <h4 className="font-medium">Requirements:</h4>
                     <ul className="list-disc pl-5 text-muted-foreground">
-                      {(job.requirements || []).map((req, index) => (
+                      {job.requirements.map((req, index) => (
                         <li key={index}>{req}</li>
                       ))}
                     </ul>
@@ -192,11 +247,11 @@ const JobListings = () => {
 
                 <CardFooter>
                   <div className="flex flex-wrap gap-2">
-                    {(job.tags || []).map((tag, index) => (
+                    {job.tags.map((tag, index) => (
                       <Badge
                         key={index}
                         variant="secondary"
-                        className="bg-gradient-to-r from-pink-500/10 to-yellow-500/10 text-pink-500 hover:from-pink-500/20 hover:to-yellow-500/20 transition-colors"
+                        className="bg-pink-500/10 text-pink-500 hover:from-pink-500/20 hover:to-yellow-500/20 transition-colors"
                       >
                         {tag}
                       </Badge>
@@ -209,14 +264,16 @@ const JobListings = () => {
         </div>
 
         {/* Pagination */}
-        <div className="max-w-4xl mx-auto mt-8">
-          <Pagination
-            currentPage={currentPage}
-            totalItems={filteredJobs.length}
-            itemsPerPage={ITEMS_PER_PAGE}
-            onPageChange={setCurrentPage}
-          />
-        </div>
+        {!loading && !error && filteredJobs.length > ITEMS_PER_PAGE && (
+          <div className="max-w-4xl mx-auto mt-8">
+            <Pagination
+              currentPage={currentPage}
+              totalItems={filteredJobs.length}
+              itemsPerPage={ITEMS_PER_PAGE}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
       </div>
 
       {/* Job Application Popup */}

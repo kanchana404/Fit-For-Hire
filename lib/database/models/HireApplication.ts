@@ -13,36 +13,26 @@ export interface IHireApplication extends Document {
   salary: string;
   description: string;
   requirements: string[];
-  email: string;
+  email: string; // Applicant's email
   tags: string[];
-  userId: string; // Reference to the User who posted
   status: ApplicationStatus;
-  createdAt: Date;
-  updatedAt: Date;
+  userId: string; // Clerk user ID who submitted the application
 }
 
-const HireApplicationSchema: Schema<IHireApplication> = new Schema(
-  {
-    jobId: { type: String, required: true, unique: true },
-    title: { type: String, required: true },
-    company: { type: String, required: true },
-    location: { type: String },
-    type: { type: String },
-    salary: { type: String },
-    description: { type: String },
-    requirements: { type: [String], default: [] },
-    email: { type: String, required: true },
-    tags: { type: [String], default: [] },
-    userId: { type: String, required: true, ref: 'User' },
-    status: {
-      type: String,
-      enum: ['published', 'review', 'reject'],
-      default: 'review',
-    },
-  },
-  { timestamps: true }
-);
+const HireApplicationSchema: Schema<IHireApplication> = new Schema({
+  jobId: { type: String, required: true, unique: true },
+  title: { type: String, required: true },
+  company: { type: String, required: true },
+  location: { type: String, required: true },
+  type: { type: String, required: true },
+  salary: { type: String, required: true },
+  description: { type: String, required: true },
+  requirements: { type: [String], default: [] },
+  email: { type: String, required: true },
+  tags: { type: [String], default: [] },
+  status: { type: String, enum: ['published', 'review', 'reject'], default: 'review' },
+  userId: { type: String, required: true }, // Clerk user ID
+});
 
 export const HireApplication: Model<IHireApplication> =
-  mongoose.models.HireApplication ||
-  mongoose.model<IHireApplication>('HireApplication', HireApplicationSchema);
+  mongoose.models.HireApplication || mongoose.model<IHireApplication>("HireApplication", HireApplicationSchema);
