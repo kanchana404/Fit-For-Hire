@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { jobs, Job } from "@/constants"; // Import Job from constants
 import {
   Card,
   CardContent,
@@ -21,6 +20,21 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import JobApplicationPopup from "@/components/JobApplicationPopup";
+import axios from "axios"; // Import axios
+
+interface Job {
+  _id: string; // Assuming MongoDB uses _id
+  title: string;
+  company: string;
+  location: string;
+  type: string;
+  salary: string;
+  description: string;
+  requirements: string[];
+  posted: string;
+  tags: string[];
+  email: string;
+}
 
 interface AnalysisFeedback {
   good_aspects: string[];
@@ -33,7 +47,8 @@ interface AnalysisResult {
   skills: string[];
 }
 
-function findSuitableJobs(skills: string[]): Job[] {
+// Updated findSuitableJobs to accept jobs as a parameter
+function findSuitableJobs(skills: string[], jobs: Job[]): Job[] {
   if (!skills || skills.length === 0) return [];
 
   return jobs.filter((job) => {
@@ -67,6 +82,11 @@ const Result = () => {
 
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
+  // New state variables for jobs, loading, and error
+  const [allJobs, setAllJobs] = useState<Job[]>([]);
+  const [loadingJobs, setLoadingJobs] = useState<boolean>(true);
+  const [jobsError, setJobsError] = useState<string>("");
+
   const handleApplyNow = (job: Job) => {
     setSelectedJob(job);
   };
@@ -97,8 +117,8 @@ const Result = () => {
         const skills = result.skills || [];
         setExtractedSkills(skills);
 
-        const jobs = findSuitableJobs(skills);
-        setRecommendedJobs(jobs);
+        // Only find suitable jobs after jobs are fetched
+        // So we'll handle it in another useEffect
       } catch (err) {
         console.error("Error parsing analysis result:", err);
         setError(
@@ -110,6 +130,61 @@ const Result = () => {
       setFileName(storedFileName);
     }
   }, []);
+
+  // Fetch jobs from the API when the component mounts
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoadingJobs(true);
+        const response = await axios.get<Job[]>("/api/jobs"); // Adjust the endpoint if necessary
+        setAllJobs(response.data);
+        setLoadingJobs(false);
+      } catch (err) {
+        console.error("Error fetching jobs:", err);
+        setJobsError("Failed to fetch job listings. Please try again later.");
+        setLoadingJobs(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
+  // Find suitable jobs whenever analysisResult or allJobs change
+  useEffect(() => {
+    if (analysisResult && allJobs.length > 0) {
+      const jobs = findSuitableJobs(analysisResult.skills, allJobs);
+      setRecommendedJobs(jobs);
+    }
+  }, [analysisResult, allJobs]);
+
+  if (jobsError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen px-4">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{jobsError}</p>
+          <Button
+            onClick={() => router.push("/")}
+            className="bg-gradient-to-r from-pink-500 to-yellow-500 text-white hover:opacity-90"
+          >
+            Return to Upload
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadingJobs || !analysisResult) {
+    return (
+      <div className="flex items-center justify-center min-h-screen px-4">
+        <Button
+          onClick={() => router.push("/")}
+          className="bg-gradient-to-r from-pink-500 to-yellow-500 text-white hover:opacity-90"
+        >
+          Return to Upload
+        </Button>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -123,19 +198,6 @@ const Result = () => {
             Return to Upload
           </Button>
         </div>
-      </div>
-    );
-  }
-
-  if (!analysisResult) {
-    return (
-      <div className="flex items-center justify-center min-h-screen px-4">
-        <Button
-          onClick={() => router.push("/")}
-          className="bg-gradient-to-r from-pink-500 to-yellow-500 text-white hover:opacity-90"
-        >
-          Return to Upload
-        </Button>
       </div>
     );
   }
@@ -189,7 +251,10 @@ const Result = () => {
                     <div className="space-y-4">
                       {Array.isArray(points) ? (
                         points.map((item, idx) => (
-                          <div key={idx} className="flex items-start gap-3">
+                          <div
+                            key={idx}
+                            className="flex items-start gap-3"
+                          >
                             <CheckCircleIcon className="mt-1 w-5 h-5 text-pink-500" />
                             <p className="text-foreground">{item}</p>
                           </div>
@@ -248,7 +313,7 @@ const Result = () => {
                 <div className="space-y-4">
                   {recommendedJobs.map((job) => (
                     <Card
-                      key={job.id}
+                      key={job._id} // Use _id from MongoDB
                       className="group hover:shadow-lg transition-all duration-200 backdrop-blur-sm bg-background/80 border-pink-500/20 hover:border-pink-500/40"
                     >
                       <CardHeader>
@@ -298,7 +363,7 @@ const Result = () => {
                         <div className="space-y-2">
                           <h4 className="font-medium">Requirements:</h4>
                           <ul className="list-disc pl-5 text-muted-foreground">
-                            {(job.requirements || []).map((req, index) => (
+                            {job.requirements.map((req, index) => (
                               <li key={index}>{req}</li>
                             ))}
                           </ul>
@@ -307,7 +372,7 @@ const Result = () => {
 
                       <CardFooter>
                         <div className="flex flex-wrap gap-2">
-                          {(job.tags || []).map((tag, index) => (
+                          {job.tags.map((tag, index) => (
                             <Badge
                               key={index}
                               variant="secondary"
