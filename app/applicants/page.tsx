@@ -3,18 +3,30 @@
 import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import axios from "axios";
-import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { 
   Briefcase, 
   Clock, 
   DollarSign, 
   MapPin, 
-  ArrowRight
+  ArrowRight,
+  Trash2
 } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from "@/components/ui/alert-dialog";
 
 interface Job {
   _id: string;
@@ -41,6 +53,7 @@ const HireApplicationsPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -61,16 +74,42 @@ const HireApplicationsPage = () => {
     fetchApplications();
   }, [isLoaded, isSignedIn, user]);
 
+  // Function to handle deletion
+  const handleDelete = async () => {
+    if (!deletingId) return;
+
+    try {
+      await axios.delete(`/api/hire-applications/${deletingId}`);
+      setApplications(prev => prev.filter(app => app._id !== deletingId));
+      toast.success("Application deleted successfully", {
+        description: "The job application has been removed from your list.",
+        duration: 3000,
+      });
+      setDeletingId(null);
+    } catch (err: any) {
+      console.error("Error deleting application:", err);
+      toast.error("Failed to delete the hire application", {
+        description: "Please try again later.",
+        duration: 3000,
+      });
+    }
+  };
+
   // Paginate applications
   const paginatedApplications = React.useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return applications.slice(start, start + ITEMS_PER_PAGE);
   }, [currentPage, applications]);
 
+  // Pagination controls
+  const totalPages = Math.ceil(applications.length / ITEMS_PER_PAGE);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
   return (
     <div className="relative min-h-screen bg-background transition-colors duration-300 mt-10">
-      <Toaster />
-
       {/* Background Gradient Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-pink-500/10 via-transparent to-yellow-500/10 dark:from-pink-500/5 dark:via-transparent dark:to-yellow-500/5 rounded-full blur-3xl animate-pulse" />
@@ -182,7 +221,7 @@ const HireApplicationsPage = () => {
                   )}
                 </CardContent>
 
-                <CardFooter className="justify-end">
+                <CardFooter className="flex justify-between">
                   <Button 
                     variant="outline"
                     className="bg-gradient-to-r from-pink-500 to-yellow-500 text-white hover:opacity-90 transition-opacity group"
@@ -190,16 +229,63 @@ const HireApplicationsPage = () => {
                     View Details
                     <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="ghost"
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => setDeletingId(app._id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete your job application.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete}>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </CardFooter>
               </Card>
             ))
           )}
         </div>
 
-        {/* Pagination - You can implement this similar to the job listings page */}
+        {/* Pagination */}
         {!loading && applications.length > ITEMS_PER_PAGE && (
-          <div className="max-w-4xl mx-auto mt-8 flex justify-center">
-            {/* Pagination component would go here */}
+          <div className="max-w-4xl mx-auto mt-8 flex justify-center space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            {[...Array(totalPages)].map((_, index) => (
+              <Button
+                key={index}
+                variant={currentPage === index + 1 ? "default" : "outline"}
+                onClick={() => handlePageChange(index + 1)}
+              >
+                {index + 1}
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
           </div>
         )}
       </div>
