@@ -31,10 +31,12 @@ import { Pagination } from "@/components/ui/pagination";
 import JobApplicationPopup from "@/components/JobApplicationPopup";
 import { Toaster } from "@/components/ui/sonner";
 import axios from "axios";
+import { formatDistanceToNow } from "date-fns"; // Import date-fns
 
 // Define the Job interface based on your Mongoose schema
 interface Job {
   _id: string;
+  jobId: string;
   title: string;
   company: string;
   location: string;
@@ -45,6 +47,7 @@ interface Job {
   posted: string;
   tags: string[];
   email: string;
+  postedAt: string; // ISO string representation of Date
 }
 
 const ITEMS_PER_PAGE = 5;
@@ -225,7 +228,8 @@ const JobListings = () => {
                     </div>
                     <div className="flex items-center">
                       <Clock className="w-4 h-4 mr-2 text-pink-500" />
-                      {job.posted}
+                      {/* Display relative time since postedAt */}
+                      {formatDistanceToNow(new Date(job.postedAt), { addSuffix: true })}
                     </div>
                   </div>
 
@@ -247,7 +251,7 @@ const JobListings = () => {
                       <Badge
                         key={index}
                         variant="secondary"
-                        className="bg-gradient-to-r from-pink-500/10 to-yellow-500/10 text-pink-500 hover:from-pink-500/20 hover:to-yellow-500/20 transition-colors"
+                        className="bg-pink-500/10 text-pink-500 hover:from-pink-500/20 hover:to-yellow-500/20 transition-colors"
                       >
                         {tag}
                       </Badge>

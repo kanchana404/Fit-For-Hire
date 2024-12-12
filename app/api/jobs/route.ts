@@ -1,23 +1,36 @@
 // app/api/jobs/route.ts
 
-import { connectToDatabase } from "@/lib/database";
-import { Job } from "@/lib/database/models/Job";
-import { NextResponse } from "next/server";
+import { connectToDatabase } from '@/lib/database';
+import { Job } from '@/lib/database/models/Job';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Connect to the database
     await connectToDatabase();
+    const jobs = await Job.find().lean(); // Use .lean() for plain JavaScript objects
 
-    // Fetch all jobs from the collection
-    const jobs = await Job.find({}).lean();
+    // Convert _id and postedAt to strings
+    const formattedJobs = jobs.map((job) => ({
+      _id: job._id.toString(),
+      jobId: job.jobId,
+      title: job.title,
+      company: job.company,
+      location: job.location,
+      type: job.type,
+      salary: job.salary,
+      description: job.description,
+      requirements: job.requirements,
+      posted: job.posted,
+      tags: job.tags,
+      email: job.email,
+      postedAt: job.postedAt.toISOString(), // Ensure postedAt is a string
+    }));
 
-    // Return the jobs as JSON
-    return NextResponse.json(jobs);
+    return NextResponse.json(formattedJobs);
   } catch (error) {
-    console.error("Error fetching jobs:", error);
+    console.error('Error fetching jobs:', error);
     return NextResponse.json(
-      { error: "Failed to fetch jobs" },
+      { message: 'Failed to fetch jobs.' },
       { status: 500 }
     );
   }

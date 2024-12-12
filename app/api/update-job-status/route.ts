@@ -7,7 +7,7 @@ import { User } from '@/lib/database/models/User'; // Import User model
 import { currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
-const AUTHORIZED_USER_ID = "user_2phMQ0jMweuG1r3t18YySLXCf4A";
+const AUTHORIZED_USER_ID = process.env.AUTHORIZED_USER_ID || "user_2phMQ0jMweuG1r3t18YySLXCf4A"; // Use environment variable
 
 export interface UpdateStatusPayload {
   jobId: string;
@@ -84,10 +84,11 @@ export async function POST(request: Request) {
       console.log(`Found user with email ${jobApplication.email}: ${userRecord.clerkId}`);
 
       // Check if Job already exists
-      const existingJob = await Job.findOne({ title: jobApplication.title, company: jobApplication.company });
+      const existingJob = await Job.findOne({ jobId: jobApplication.jobId });
 
       if (!existingJob) {
         const newJob = new Job({
+          jobId: jobApplication.jobId,
           title: jobApplication.title,
           company: jobApplication.company,
           location: jobApplication.location,
@@ -98,6 +99,7 @@ export async function POST(request: Request) {
           posted: userRecord.clerkId, // Set to User's clerkId
           tags: jobApplication.tags,
           email: jobApplication.email,
+          postedAt: new Date(), // Set to current time
         });
 
         try {
