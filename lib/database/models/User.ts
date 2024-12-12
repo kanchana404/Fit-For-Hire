@@ -9,17 +9,15 @@ export interface IUser extends Document {
   firstName?: string;
   lastName?: string;
   photo?: string;
-  // scans: number; // Removed scans field
 }
 
 const UserSchema: Schema<IUser> = new Schema({
   clerkId: { type: String, required: true, unique: true },
-  email: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
   username: { type: String },
   firstName: { type: String },
   lastName: { type: String },
   photo: { type: String },
-  // scans: { type: Number, default: 3 }, // Removed scans field
 });
 
 export const User: Model<IUser> =

@@ -163,7 +163,7 @@ const JobPostingDetailsPage: React.FC = () => {
 
   // Render job details with status update functionality
   return (
-    <div className="relative min-h-screen flex items-center bg-background mt-9">
+    <div className="relative min-h-screen flex items-center bg-background mt-20 md:mt-32 lg:mt-20 sm:mt-20">
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-transparent to-yellow-500/10 -z-10" />
 
