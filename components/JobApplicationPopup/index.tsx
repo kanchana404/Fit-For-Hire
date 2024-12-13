@@ -1,6 +1,7 @@
 // components/JobApplicationPopup/index.tsx
 
 "use client";
+
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,12 +14,13 @@ import {
 } from "@/components/ui/dialog";
 import { Upload, FileText, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUploadThing } from "@/utils/uploadthing";
+import { useUploadThing } from "@/utils/uploadthing"; // Ensure UploadThing is set up
 import { toast } from "sonner"; // Ensure 'sonner' is installed and set up
 
 interface JobApplicationPopupProps {
   isOpen: boolean;
   onClose: () => void;
+  jobId: string; // Reference to the job
   jobTitle: string;
   jobCompany: string;
   jobEmail: string;
@@ -38,6 +40,7 @@ interface PersonalDetails {
 const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
   isOpen,
   onClose,
+  jobId,
   jobTitle,
   jobCompany,
   jobEmail,
@@ -66,6 +69,7 @@ const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
         const applicationData = {
           ...personalDetails,
           resumeUrl: uploadedUrl,
+          jobId, // Included jobId
           jobTitle,
           jobCompany,
           jobEmail,
@@ -81,12 +85,13 @@ const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
             body: JSON.stringify(applicationData),
           });
 
+          const responseData = await response.json();
+
           if (response.ok) {
-            toast.success("Application submitted successfully!");
+            toast.success("Application submitted and saved successfully!");
             onClose();
           } else {
-            const errorData = await response.json();
-            toast.error(`Failed to send application: ${errorData.message}`);
+            toast.error(`Failed to submit application: ${responseData.message}`);
           }
         } catch (error) {
           console.error("Error submitting application:", error);
@@ -361,7 +366,7 @@ const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
 
         <Button
           onClick={handleStartApplication}
-          className="w-full bg-gradient-to-r from-pink-500 to-yellow-500 text-white hover:opacity-90 mt-4"
+          className="w-full bg-gradient-to-r from-pink-500 to-yellow-500 text-white hover:opacity-90 mt-4 flex items-center justify-center"
           disabled={isUploading}
         >
           {isUploading ? "Sending..." : "Submit Application"}
