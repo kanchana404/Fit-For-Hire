@@ -1,13 +1,23 @@
 // app/api/send-email/route.ts
 
-import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
+import { connectToDatabase } from "@/lib/database";
+import { Job } from "@/lib/database/models/Job";
+import { JobApplication } from "@/lib/database/models/JobApplication";
+import { NextResponse } from "next/server";
+import nodemailer from "nodemailer";
 
-// This is the handler for the POST request
 export async function POST(request: Request) {
   try {
+    // Connect to the database
+    await connectToDatabase();
+    console.log("Database connected successfully.");
+
+    // Parse the request body
     const body = await request.json();
+    console.log("Received request body:", body);
+
     const {
+      jobId,
       firstName,
       lastName,
       email,
@@ -19,22 +29,61 @@ export async function POST(request: Request) {
       resumeUrl,
       jobTitle,
       jobCompany,
-      jobEmail, // The recipient's email address from the job posting
+      jobEmail,
     } = body;
 
-    if (!firstName || !lastName || !email || !phone || !resumeUrl || !jobEmail) {
-      return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
+    // Validate required fields
+    if (
+      !jobId ||
+      !firstName ||
+      !lastName ||
+      !email ||
+      !phone ||
+      !resumeUrl ||
+      !jobEmail
+    ) {
+      console.warn("Missing required fields.");
+      return NextResponse.json(
+        { message: "Missing required fields" },
+        { status: 400 }
+      );
     }
+
+    // Verify that the jobId exists in the database
+    const job = await Job.findOne({ jobId });
+    if (!job) {
+      console.warn(`Invalid jobId: ${jobId}`);
+      return NextResponse.json({ message: "Invalid jobId" }, { status: 400 });
+    }
+    console.log(`Found job: ${job.title} at ${job.company}`);
+
+    // Save the application to the database
+    const application = new JobApplication({
+      job: job._id,
+      firstName,
+      lastName,
+      email,
+      phone,
+      address,
+      city,
+      state,
+      zipCode,
+      resumeUrl,
+    });
+
+    await application.save();
+    console.log("Job application saved to the database.");
 
     // Configure the transporter with environment variables
     const transporter = nodemailer.createTransport({
-      service: 'Gmail',
+      service: "Gmail",
       auth: {
         user: process.env.APP_EMAIL, // Email from environment variables
         pass: process.env.APP_PASSWORD, // App password from environment variables
       },
     });
 
+    // Define the email options
     const mailOptions = {
       from: `"${firstName} ${lastName}" <${email}>`,
       to: jobEmail, // Send to the job's email address
@@ -47,7 +96,7 @@ Phone: ${phone}
 Address: ${address}, ${city}, ${state}, ${zipCode}
 
 Resume: ${resumeUrl}
-`,
+      `,
       html: `
         <h3>Applicant Details:</h3>
         <p><strong>Name:</strong> ${firstName} ${lastName}</p>
@@ -58,13 +107,22 @@ Resume: ${resumeUrl}
       `,
     };
 
+    // Send the email
     await transporter.sendMail(mailOptions);
+    console.log("Application email sent successfully.");
 
-    return NextResponse.json({ message: 'Application sent successfully!' }, { status: 200 });
+    // Respond with success
+    return NextResponse.json({ message: "Application sent!" }, { status: 200 });
   } catch (error) {
-    console.error('Error:', error instanceof Error ? error.message : String(error));
+    console.error(
+      "Error:",
+      error instanceof Error ? error.message : String(error)
+    );
     return NextResponse.json(
-      { message: 'Failed to send application', error: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        message: "Failed to send application",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

@@ -14,7 +14,7 @@ export interface IJob extends Document {
   posted: string; // clerkId of the user who posted the job
   tags: string[];
   email: string;
-  postedAt: Date; // New field to store the approval timestamp
+  postedAt: Date; // Timestamp when the job was posted
 }
 
 const JobSchema: Schema<IJob> = new Schema({

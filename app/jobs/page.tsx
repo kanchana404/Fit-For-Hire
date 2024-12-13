@@ -207,7 +207,7 @@ const JobListings = () => {
                       className="bg-gradient-to-r from-pink-500 to-yellow-500 text-white hover:opacity-90 transition-opacity group"
                     >
                       Apply Now
-                      <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
                   </div>
                 </CardHeader>
@@ -281,6 +281,7 @@ const JobListings = () => {
         <JobApplicationPopup
           isOpen={!!selectedJob}
           onClose={handleClosePopup}
+          jobId={selectedJob.jobId} // Passed jobId correctly
           jobTitle={selectedJob.title}
           jobCompany={selectedJob.company}
           jobEmail={selectedJob.email}

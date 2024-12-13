@@ -1,4 +1,7 @@
+// app/jobs/result.tsx
+
 "use client";
+
 import React, { useEffect, useState } from "react";
 import {
   ArrowLeft,
@@ -23,7 +26,8 @@ import JobApplicationPopup from "@/components/JobApplicationPopup";
 import axios from "axios"; // Import axios
 
 interface Job {
-  _id: string; // Assuming MongoDB uses _id
+  _id: string;
+  jobId: string; // Ensure jobId is included
   title: string;
   company: string;
   location: string;
@@ -47,7 +51,7 @@ interface AnalysisResult {
   skills: string[];
 }
 
-// Updated findSuitableJobs to accept jobs as a parameter
+// Utility function to find suitable jobs based on skills
 function findSuitableJobs(skills: string[], jobs: Job[]): Job[] {
   if (!skills || skills.length === 0) return [];
 
@@ -331,7 +335,7 @@ const Result = () => {
                             className="bg-gradient-to-r from-pink-500 to-yellow-500 text-white hover:opacity-90 transition-opacity group flex items-center"
                           >
                             Apply Now
-                            <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                            <ArrowRight className="ml-2 w-4 h-4" />
                           </Button>
                         </div>
                       </CardHeader>
@@ -418,6 +422,7 @@ const Result = () => {
         <JobApplicationPopup
           isOpen={!!selectedJob}
           onClose={handleClosePopup}
+          jobId={selectedJob.jobId} // Passed jobId correctly
           jobTitle={selectedJob.title}
           jobCompany={selectedJob.company}
           jobEmail={selectedJob.email}

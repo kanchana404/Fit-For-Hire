@@ -1,4 +1,4 @@
-// models/HireApplication.ts
+// lib/database/models/HireApplication.ts
 
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
@@ -17,6 +17,7 @@ export interface IHireApplication extends Document {
   tags: string[];
   status: ApplicationStatus;
   userId: string; // Clerk user ID who submitted the application
+  postedAt: Date; // Timestamp when the status was updated
 }
 
 const HireApplicationSchema: Schema<IHireApplication> = new Schema({
@@ -32,6 +33,7 @@ const HireApplicationSchema: Schema<IHireApplication> = new Schema({
   tags: { type: [String], default: [] },
   status: { type: String, enum: ['published', 'review', 'reject'], default: 'review' },
   userId: { type: String, required: true }, // Clerk user ID
+  postedAt: { type: Date, default: Date.now }, // Initialize with current date
 });
 
 export const HireApplication: Model<IHireApplication> =
