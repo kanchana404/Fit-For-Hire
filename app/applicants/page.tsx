@@ -1,5 +1,3 @@
-// app/applicants/page.tsx
-
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -15,6 +13,8 @@ import {
   ArrowRight,
   Trash2
 } from "lucide-react";
+import Link from "next/link"; // Import Link
+import { useRouter } from "next/router"; // If using useRouter
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -231,13 +231,29 @@ const HireApplicationsPage = () => {
                 </CardContent>
 
                 <CardFooter className="flex justify-between">
+                  {/* Using Link for navigation */}
+                  <Link href={`/applicants/${app._id}`} passHref legacyBehavior>
+                    <Button
+                      variant="outline"
+                      className="bg-gradient-to-r from-pink-500 to-yellow-500 text-white hover:opacity-90 transition-opacity group"
+                    >
+                      View Details
+                      <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+
+                  {/* Alternatively, using useRouter for navigation */}
+                  {/* 
                   <Button 
                     variant="outline"
                     className="bg-gradient-to-r from-pink-500 to-yellow-500 text-white hover:opacity-90 transition-opacity group"
+                    onClick={() => router.push(`/applicants/${app._id}`)}
                   >
                     View Details
                     <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
+                  */}
+
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button 
