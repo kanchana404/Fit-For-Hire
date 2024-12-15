@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { Upload, FileText, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUploadThing } from "@/utils/uploadthing"; // Ensure UploadThing is set up
 import { toast } from "sonner"; // Ensure 'sonner' is installed and set up
+import { useUploadThing } from "@/utils/uploadthing";
 
 interface JobApplicationPopupProps {
   isOpen: boolean;

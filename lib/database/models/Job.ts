@@ -1,4 +1,4 @@
-// models/Job.ts
+// lib/database/models/Job.ts
 
 import mongoose, { Schema, Document, Model } from "mongoose";
 

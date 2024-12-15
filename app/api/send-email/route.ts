@@ -2,7 +2,7 @@
 
 import { connectToDatabase } from "@/lib/database";
 import { Job } from "@/lib/database/models/Job";
-import { JobApplication } from "@/lib/database/models/JobApplication";
+import { Application } from "@/lib/database/models/Application";
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
@@ -40,6 +40,8 @@ export async function POST(request: Request) {
       !email ||
       !phone ||
       !resumeUrl ||
+      !jobTitle ||
+      !jobCompany ||
       !jobEmail
     ) {
       console.warn("Missing required fields.");
@@ -57,9 +59,9 @@ export async function POST(request: Request) {
     }
     console.log(`Found job: ${job.title} at ${job.company}`);
 
-    // Save the application to the database
-    const application = new JobApplication({
-      job: job._id,
+    // Save the application to the Application collection
+    const application = new Application({
+      jobId,
       firstName,
       lastName,
       email,
@@ -69,6 +71,10 @@ export async function POST(request: Request) {
       state,
       zipCode,
       resumeUrl,
+      jobTitle,
+      jobCompany,
+      jobEmail,
+      status: 'review',
     });
 
     await application.save();
