@@ -1,4 +1,4 @@
-// app/jobs/result.tsx
+// app/result/page.tsx
 
 "use client";
 
@@ -24,6 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import JobApplicationPopup from "@/components/JobApplicationPopup";
 import axios from "axios"; // Import axios
+import { formatDistanceToNow } from "date-fns";
 
 interface Job {
   _id: string;
@@ -38,6 +39,7 @@ interface Job {
   posted: string;
   tags: string[];
   email: string;
+  postedAt: string; // ISO string representation of Date
 }
 
 interface AnalysisFeedback {
@@ -356,7 +358,7 @@ const Result = () => {
                           </div>
                           <div className="flex items-center">
                             <Clock className="w-4 h-4 mr-2 text-pink-500" />
-                            {job.posted}
+                            {formatDistanceToNow(new Date(job.postedAt), { addSuffix: true })}
                           </div>
                         </div>
 
