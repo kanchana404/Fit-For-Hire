@@ -5,6 +5,7 @@ import {
   HireApplication,
   IHireApplication,
 } from "@/lib/database/models/HireApplication";
+import { Application } from "@/lib/database/models/Application";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -21,6 +22,7 @@ interface IFormattedHireApplication {
   tags: string[];
   status: string;
   _id: string;
+  applicantCount: number;
 }
 
 export async function GET() {
@@ -49,6 +51,18 @@ export async function GET() {
       IHireApplication[]
     >();
 
+    const jobIds = applications.map(app => app.jobId);
+
+    const applicantCounts = await Application.aggregate([
+      { $match: { jobId: { $in: jobIds } } },
+      { $group: { _id: "$jobId", count: { $sum: 1 } } },
+    ]);
+
+    const countMap: { [key: string]: number } = {};
+    applicantCounts.forEach(item => {
+      countMap[item._id] = item.count;
+    });
+
     const formattedApplications: IFormattedHireApplication[] = applications.map(
       (app) => ({
         jobId: app.jobId,
@@ -63,6 +77,7 @@ export async function GET() {
         tags: app.tags,
         status: app.status,
         _id: String(app._id),
+        applicantCount: countMap[app.jobId] || 0,
       })
     );
 
