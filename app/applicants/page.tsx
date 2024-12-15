@@ -1,3 +1,5 @@
+// app/applicants/page.tsx
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -43,6 +45,7 @@ interface Job {
   email: string;
   status: string;
   postedAt: string | null;
+  applicantCount: number;
 }
 
 const ITEMS_PER_PAGE = 5;
@@ -219,6 +222,12 @@ const HireApplicationsPage = () => {
                       ))}
                     </div>
                   )}
+
+                  <div className="mt-2">
+                    <Badge variant="outline" className="bg-blue-500/10 text-blue-500">
+                      {app.applicantCount} Applicants
+                    </Badge>
+                  </div>
                 </CardContent>
 
                 <CardFooter className="flex justify-between">
