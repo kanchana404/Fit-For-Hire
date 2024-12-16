@@ -1,3 +1,5 @@
+// app/applicants/page.tsx
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -13,21 +15,26 @@ import {
   ArrowRight,
   Trash2
 } from "lucide-react";
-import Link from "next/link"; // Import Link
-import { useRouter } from "next/router"; // If using useRouter
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle, 
-  AlertDialogTrigger 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 interface Job {
@@ -56,7 +63,6 @@ const HireApplicationsPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -66,9 +72,13 @@ const HireApplicationsPage = () => {
           const response = await axios.get<Job[]>("/api/hire-applications");
           setApplications(response.data);
           setLoading(false);
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error("Error fetching applications:", err);
-          setError("Failed to fetch your hire applications.");
+          if (err instanceof Error) {
+            setError(err.message || "Failed to fetch your hire applications.");
+          } else {
+            setError("Failed to fetch your hire applications.");
+          }
           setLoading(false);
         }
       }
@@ -78,9 +88,7 @@ const HireApplicationsPage = () => {
   }, [isLoaded, isSignedIn, user]);
 
   // Function to handle deletion
-  const handleDelete = async () => {
-    if (!deletingId) return;
-
+  const handleDelete = async (deletingId: string) => {
     try {
       await axios.delete(`/api/hire-applications/${deletingId}`);
       setApplications(prev => prev.filter(app => app._id !== deletingId));
@@ -88,13 +96,19 @@ const HireApplicationsPage = () => {
         description: "The job application has been removed from your list.",
         duration: 3000,
       });
-      setDeletingId(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error deleting application:", err);
-      toast.error("Failed to delete the hire application", {
-        description: "Please try again later.",
-        duration: 3000,
-      });
+      if (err instanceof Error) {
+        toast.error("Failed to delete the hire application", {
+          description: err.message || "Please try again later.",
+          duration: 3000,
+        });
+      } else {
+        toast.error("Failed to delete the hire application", {
+          description: "Please try again later.",
+          duration: 3000,
+        });
+      }
     }
   };
 
@@ -242,7 +256,7 @@ const HireApplicationsPage = () => {
                     </Button>
                   </Link>
 
-                  {/* Alternatively, using useRouter for navigation */}
+                  {/* Alternatively, using useParams for navigation */}
                   {/* 
                   <Button 
                     variant="outline"
@@ -259,7 +273,6 @@ const HireApplicationsPage = () => {
                       <Button 
                         variant="ghost"
                         className="text-red-500 hover:text-red-700"
-                        onClick={() => setDeletingId(app._id)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -273,7 +286,7 @@ const HireApplicationsPage = () => {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete}>
+                        <AlertDialogAction onClick={() => handleDelete(app._id)}>
                           Delete
                         </AlertDialogAction>
                       </AlertDialogFooter>

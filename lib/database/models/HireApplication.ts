@@ -2,7 +2,7 @@
 
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
-export type ApplicationStatus = 'published' | 'review' | 'reject';
+export type ApplicationStatus = 'published' | 'review' | 'reject' | 'ready_to_interview';
 
 export interface IHireApplication extends Document {
   jobId: string;
@@ -31,7 +31,7 @@ const HireApplicationSchema: Schema<IHireApplication> = new Schema({
   requirements: { type: [String], default: [] },
   email: { type: String, required: true },
   tags: { type: [String], default: [] },
-  status: { type: String, enum: ['published', 'review', 'reject'], default: 'review' },
+  status: { type: String, enum: ['published', 'review', 'reject', 'ready_to_interview'], default: 'review' },
   userId: { type: String, required: true }, // Clerk user ID
   postedAt: { type: Date, default: Date.now }, // Initialize with current date
 });

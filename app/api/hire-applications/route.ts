@@ -1,10 +1,7 @@
 // app/api/hire-applications/route.ts
 
 import { connectToDatabase } from "@/lib/database";
-import {
-  HireApplication,
-  IHireApplication,
-} from "@/lib/database/models/HireApplication";
+import { HireApplication, IHireApplication } from "@/lib/database/models/HireApplication";
 import { Application } from "@/lib/database/models/Application";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
@@ -47,9 +44,7 @@ export async function GET() {
 
     await connectToDatabase();
 
-    const applications = await HireApplication.find({ email: userEmail }).lean<
-      IHireApplication[]
-    >();
+    const applications = await HireApplication.find({ email: userEmail }).lean<IHireApplication[]>();
 
     const jobIds = applications.map(app => app.jobId);
 
