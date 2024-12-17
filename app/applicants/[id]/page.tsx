@@ -206,112 +206,123 @@ const ApplicantsPage = () => {
               </CardContent>
             </Card>
           ) : (
-            paginatedApplicants.map((applicant) => (
-              <Card
-                key={applicant._id}
-                className="group hover:shadow-lg transition-all duration-200 backdrop-blur-sm bg-background/80 border-pink-500/20 hover:border-pink-500/40"
-              >
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-2xl mb-2 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-yellow-500">
-                        {applicant.firstName} {applicant.lastName}
-                      </CardTitle>
-                      <p className="text-lg text-muted-foreground">
-                        {applicant.email}
-                      </p>
-                    </div>
-                    <Badge
-                      variant="secondary"
-                      className={`
-                        ${
-                          applicant.status === "published"
-                            ? "bg-green-500/10 text-green-500"
-                            : applicant.status === "review"
-                            ? "bg-yellow-500/10 text-yellow-500"
-                            : applicant.status === "ready_to_interview"
-                            ? "bg-blue-500/10 text-blue-500"
-                            : "bg-red-500/10 text-red-500"
-                        }
-                      `}
-                    >
-                      {applicant.status.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-4">
-                  <div className="flex flex-wrap gap-4 text-muted-foreground">
-                    <div className="flex items-center">
-                      <MapPin className="w-4 h-4 mr-2 text-pink-500" />
-                      {applicant.city}, {applicant.state}
-                    </div>
-                    <div className="flex items-center">
-                      <Briefcase className="w-4 h-4 mr-2 text-pink-500" />
-                      {applicant.jobTitle} at {applicant.jobCompany}
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-2 text-pink-500" />
-                      {formatDistanceToNow(new Date(applicant.postedAt), {
-                        addSuffix: true,
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <a href={applicant.resumeUrl} target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline" className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/20">
-                        <Download className="w-4 h-4 mr-2" />
-                        View Resume
-                      </Button>
-                    </a>
-                  </div>
-                </CardContent>
-
-                <CardFooter className="flex space-x-2">
-                  <Button
-                    variant="ghost"
-                    className="text-red-500 hover:text-red-700"
-                    onClick={() => handleStatusUpdate(applicant._id, 'reject')}
-                  >
-                    <XCircle className="w-4 h-4 mr-1" />
-                    Reject
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="text-green-500 hover:text-green-700"
-                    onClick={() => handleStatusUpdate(applicant._id, 'ready_to_interview')}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    Ready to Interview
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="text-red-500 hover:text-red-700"
+            paginatedApplicants.map((applicant) => {
+              const isReview = applicant.status === 'review';
+              return (
+                <Card
+                  key={applicant._id}
+                  className="group hover:shadow-lg transition-all duration-200 backdrop-blur-sm bg-background/80 border-pink-500/20 hover:border-pink-500/40"
+                >
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-2xl mb-2 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-yellow-500">
+                          {applicant.firstName} {applicant.lastName}
+                        </CardTitle>
+                        <p className="text-lg text-muted-foreground">
+                          {applicant.email}
+                        </p>
+                      </div>
+                      <Badge
+                        variant="secondary"
+                        className={`
+                          ${
+                            applicant.status === "published"
+                              ? "bg-green-500/10 text-green-500"
+                              : applicant.status === "review"
+                              ? "bg-yellow-500/10 text-yellow-500"
+                              : applicant.status === "ready_to_interview"
+                              ? "bg-blue-500/10 text-blue-500"
+                              : "bg-red-500/10 text-red-500"
+                          }
+                        `}
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete the applicant&apos;s data.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(applicant._id)}>
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </CardFooter>
-              </Card>
-            ))
+                        {applicant.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="space-y-4">
+                    <div className="flex flex-wrap gap-4 text-muted-foreground">
+                      <div className="flex items-center">
+                        <MapPin className="w-4 h-4 mr-2 text-pink-500" />
+                        {applicant.city}, {applicant.state}
+                      </div>
+                      <div className="flex items-center">
+                        <Briefcase className="w-4 h-4 mr-2 text-pink-500" />
+                        {applicant.jobTitle} at {applicant.jobCompany}
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="w-4 h-4 mr-2 text-pink-500" />
+                        {formatDistanceToNow(new Date(applicant.postedAt), {
+                          addSuffix: true,
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <a href={applicant.resumeUrl} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/20">
+                          <Download className="w-4 h-4 mr-2" />
+                          View Resume
+                        </Button>
+                      </a>
+                    </div>
+                  </CardContent>
+
+                  <CardFooter className="flex space-x-2">
+                    {/* **Reject Button** */}
+                    <Button
+                      variant="ghost"
+                      className={`text-red-500 hover:text-red-700 ${!isReview ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      onClick={() => handleStatusUpdate(applicant._id, 'reject')}
+                      disabled={!isReview}
+                    >
+                      <XCircle className="w-4 h-4 mr-1" />
+                      Reject
+                    </Button>
+
+                    {/* **Ready to Interview Button** */}
+                    <Button
+                      variant="ghost"
+                      className={`text-green-500 hover:text-green-700 ${!isReview ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      onClick={() => handleStatusUpdate(applicant._id, 'ready_to_interview')}
+                      disabled={!isReview}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                      Ready to Interview
+                    </Button>
+
+                    {/* **Delete Button** (Optional: Disable if not in review) */}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className={`text-red-500 hover:text-red-700 ${!isReview ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          disabled={!isReview}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the applicant&apos;s data.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(applicant._id)}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </CardFooter>
+                </Card>
+              )
+            })
           )}
         </div>
 
