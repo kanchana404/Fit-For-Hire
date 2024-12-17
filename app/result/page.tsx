@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import JobApplicationPopup from "@/components/JobApplicationPopup";
 import axios from "axios"; // Import axios
 import { formatDistanceToNow } from "date-fns";
+import { useUser } from "@clerk/nextjs"; // Import useUser hook from Clerk
 
 interface Job {
   _id: string;
@@ -78,6 +79,14 @@ function findSuitableJobs(skills: string[], jobs: Job[]): Job[] {
 
 const Result = () => {
   const router = useRouter();
+  const { user } = useUser(); // Get the current user from Clerk
+
+  // Extract user details
+  const userEmail =
+    user?.primaryEmailAddress?.emailAddress || ""; // Ensure it's a string
+  const firstName = user?.firstName || "";
+  const lastName = user?.lastName || "";
+
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(
     null
   );
@@ -100,6 +109,19 @@ const Result = () => {
   const handleClosePopup = () => {
     setSelectedJob(null);
   };
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        // If you need additional user data from the server, you can fetch it here
+        // For now, we're using the client-side useUser hook
+      } catch (err) {
+        console.error("Error fetching current user:", err);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     const storedResult = localStorage.getItem("analysisResult");
@@ -382,7 +404,7 @@ const Result = () => {
                             <Badge
                               key={index}
                               variant="secondary"
-                              className="bg-gradient-to-r from-pink-500/10 to-yellow-500/10 text-pink-500 hover:from-pink-500/20 hover:to-yellow-500/20 transition-colors"
+                              className="bg-pink-500/10 text-pink-500 hover:from-pink-500/20 hover:to-yellow-500/20 transition-colors"
                             >
                               {tag}
                             </Badge>
@@ -428,6 +450,9 @@ const Result = () => {
           jobTitle={selectedJob.title}
           jobCompany={selectedJob.company}
           jobEmail={selectedJob.email}
+          userEmail={userEmail} // Pass userEmail
+          firstName={firstName} // Pass firstName
+          lastName={lastName} // Pass lastName
         />
       )}
     </div>
