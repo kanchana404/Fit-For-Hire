@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,6 +24,9 @@ interface JobApplicationPopupProps {
   jobTitle: string;
   jobCompany: string;
   jobEmail: string;
+  userEmail: string; // Added userEmail prop
+  firstName: string; // Added firstName prop
+  lastName: string; // Added lastName prop
 }
 
 interface PersonalDetails {
@@ -44,6 +47,9 @@ const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
   jobTitle,
   jobCompany,
   jobEmail,
+  userEmail, // Destructure userEmail
+  firstName, // Destructure firstName
+  lastName, // Destructure lastName
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [errors, setErrors] = useState<
@@ -52,15 +58,30 @@ const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [personalDetails, setPersonalDetails] = useState<PersonalDetails>({
-    firstName: "",
-    lastName: "",
-    email: "",
+    firstName: firstName, // Initialize with passed firstName
+    lastName: lastName, // Initialize with passed lastName
+    email: userEmail, // Initialize email with userEmail
     phone: "",
     address: "",
     city: "",
     state: "",
     zipCode: "",
   });
+
+  useEffect(() => {
+    setPersonalDetails((prev) => ({
+      ...prev,
+      firstName: firstName, // Update firstName when prop changes
+      lastName: lastName, // Update lastName when prop changes
+      email: userEmail, // Update email when userEmail changes
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      firstName: "",
+      lastName: "",
+      email: "", // Clear email errors
+    }));
+  }, [userEmail, firstName, lastName]);
 
   const { startUpload, isUploading } = useUploadThing("resumeUploader", {
     onClientUploadComplete: async (res) => {
@@ -217,6 +238,7 @@ const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
                 onChange={handlePersonalDetailsChange}
                 placeholder="First Name*"
                 required
+                disabled // Make first name non-editable if desired
               />
               {errors.firstName && (
                 <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
@@ -229,6 +251,7 @@ const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
                 onChange={handlePersonalDetailsChange}
                 placeholder="Last Name*"
                 required
+                disabled // Make last name non-editable if desired
               />
               {errors.lastName && (
                 <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
@@ -245,6 +268,7 @@ const JobApplicationPopup: React.FC<JobApplicationPopupProps> = ({
               onChange={handlePersonalDetailsChange}
               placeholder="Email Address*"
               required
+              disabled // Make email non-editable
             />
             {errors.email && (
               <p className="text-red-500 text-xs mt-1">{errors.email}</p>

@@ -32,6 +32,7 @@ import JobApplicationPopup from "@/components/JobApplicationPopup";
 import { Toaster } from "@/components/ui/sonner";
 import axios from "axios";
 import { formatDistanceToNow } from "date-fns"; // Import date-fns
+import { useUser } from "@clerk/nextjs"; // Import useUser hook from Clerk
 
 // Define the Job interface based on your Mongoose schema
 interface Job {
@@ -53,6 +54,14 @@ interface Job {
 const ITEMS_PER_PAGE = 5;
 
 const JobListings = () => {
+  const { user } = useUser(); // Get the current user from Clerk
+
+  // Extract user details
+  const userEmail =
+    user?.primaryEmailAddress?.emailAddress || ""; // Ensure it's a string
+  const firstName = user?.firstName || "";
+  const lastName = user?.lastName || "";
+
   // State variables for search and filter
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -285,10 +294,15 @@ const JobListings = () => {
           jobTitle={selectedJob.title}
           jobCompany={selectedJob.company}
           jobEmail={selectedJob.email}
+          userEmail={userEmail} // Pass userEmail
+          firstName={firstName} // Pass firstName
+          lastName={lastName} // Pass lastName
         />
       )}
     </div>
   );
 };
+
+
 
 export default JobListings;
