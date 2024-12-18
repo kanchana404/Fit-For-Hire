@@ -85,14 +85,12 @@ const Hero = () => {
         const uploadedUrl = res[0].url;
 
         try {
-          const response = await fetch(
-            "http://82.180.162.124:8000/check-ats-friendly",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ url: uploadedUrl }),
-            }
-          );
+          // Updated fetch to use the new API route
+          const response = await fetch("/api/scan-api", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: uploadedUrl }),
+          });
 
           if (!response.ok) {
             const errorData = await response.json();
