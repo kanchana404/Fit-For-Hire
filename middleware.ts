@@ -6,7 +6,8 @@ const isPublicRoute = createRouteMatcher([
   '/api(.*)',
   '/',           // Home route (not protected)
   '/home(.*)' ,
-  '/result(.*)'
+  '/result(.*)',
+  '/api/create-checkout-session'
       // Additional public route if needed
 ])
 

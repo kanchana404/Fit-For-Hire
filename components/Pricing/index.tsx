@@ -1,13 +1,21 @@
+// components/Pricing/index.tsx
+
 "use client";
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { CheckCircle } from "lucide-react";
-import { loadStripe } from "@stripe/stripe-js"; // Import loadStripe
+import { loadStripe } from "@stripe/stripe-js";
+import { useUser } from '@clerk/nextjs'; // Import useUser
+import { useRouter } from 'next/navigation';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string); // Initialize Stripe outside component
 
 const PricingPlans = () => {
   const [isAnnual, setIsAnnual] = useState(false);
   const [plan, setPlan] = useState<'free' | 'pro'>('pro'); // Default to pro plan ($8/month)
+  const { isSignedIn, user } = useUser(); // Get user authentication state
+  const router = useRouter();
 
   const freePlanFeatures = [
     "Basic Resume Screening",
@@ -30,6 +38,12 @@ const PricingPlans = () => {
   };
 
   const handlePlanSelection = (selectedPlan: 'free' | 'pro') => {
+    if (selectedPlan === 'pro' && !isSignedIn) {
+      // Redirect to sign-in page or show a sign-in modal
+      alert("Please sign in to select the Pro plan.");
+      router.push('/sign-in'); // Adjust the route as per your application
+      return;
+    }
     setPlan(selectedPlan);
   };
 
@@ -37,6 +51,12 @@ const PricingPlans = () => {
     if (plan === 'free') {
       alert("You selected the Free plan, no payment required.");
       return; // Do nothing for free plan
+    }
+
+    if (!isSignedIn) {
+      alert("Please sign in to proceed with the Pro plan.");
+      router.push('/sign-in'); // Adjust the route as per your application
+      return;
     }
 
     try {
@@ -51,10 +71,10 @@ const PricingPlans = () => {
       const data = await response.json();
       if (data.id) {
         // Redirect to Stripe Checkout
-        const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string);
+        const stripe = await stripePromise;
         stripe?.redirectToCheckout({ sessionId: data.id });
       } else {
-        alert("Error creating checkout session");
+        alert(data.error || "Error creating checkout session");
       }
     } catch (error) {
       console.error("Error:", error);
