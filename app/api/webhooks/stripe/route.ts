@@ -1,117 +1,183 @@
-// import { NextRequest, NextResponse } from "next/server";
-// import Stripe from "stripe";
-// import {
-//   createOrUpdateSubscription,
-//   createTransaction,
-//   processReferralCommission,
-// } from "@/actions/subscription.action"; // Import processReferralCommission
-// import { getUserById } from "@/actions/UserAction"; // Import getUserById
+// app/api/webhooks/stripe/route.ts
 
-// export async function POST(request: NextRequest) {
-//   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-//     apiVersion: "2024-10-28.acacia",
-//   });
+import { NextResponse } from 'next/server';
+import Stripe from 'stripe';
+import { connectToDatabase } from '../../../../lib/database'; // Adjust the path as needed
+import { User } from '../../../../lib/database/models/User';
+import { Subscription } from '../../../../lib/database/models/Subscription';
 
-//   const sig = request.headers.get("stripe-signature") as string;
-//   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+// Initialize Stripe with your secret key and specify the API version
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+  apiVersion: '2024-11-20.acacia',
+});
 
-//   const buf = await request.arrayBuffer();
-//   const rawBody = Buffer.from(buf);
+// Define the handler for POST requests
+export async function POST(req: Request) {
+  // Retrieve the Stripe signature from the headers
+  const signature = req.headers.get('stripe-signature');
 
-//   let event: Stripe.Event;
+  // Your Stripe Webhook Secret (set in .env)
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-//   try {
-//     event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
-//   } catch (err: any) {
-//     console.error("Webhook signature verification failed:", err.message);
-//     return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
-//   }
+  // Check if webhook secret is set
+  if (!webhookSecret) {
+    console.error('STRIPE_WEBHOOK_SECRET is not defined.');
+    return NextResponse.json(
+      { error: 'Webhook Secret not configured' },
+      { status: 500 }
+    );
+  }
 
-//   // Handle the event
-//   switch (event.type) {
-//     case "customer.subscription.created":
-//     case "customer.subscription.updated":
-//     case "customer.subscription.deleted":
-//       const subscription = event.data.object as Stripe.Subscription;
-//       await handleSubscriptionEvent(stripe, subscription, event.type);
-//       break;
-//     default:
-//       console.log(`Unhandled event type ${event.type}`);
-//   }
+  // Check if signature header is present
+  if (!signature) {
+    console.error('Missing Stripe signature.');
+    return NextResponse.json(
+      { error: 'Missing Stripe signature' },
+      { status: 400 }
+    );
+  }
 
-//   return NextResponse.json({ received: true });
-// }
+  let event: Stripe.Event;
 
-// async function handleSubscriptionEvent(
-//   stripe: Stripe,
-//   subscription: Stripe.Subscription,
-//   eventType: string
-// ) {
-//   try {
-//     const customer = (await stripe.customers.retrieve(
-//       subscription.customer as string
-//     )) as Stripe.Customer;
-//     const clerkUserId = customer?.metadata?.clerkUserId;
+  try {
+    // Read the raw body as text
+    const body = await req.text();
 
-//     if (!clerkUserId) {
-//       console.error("No clerkUserId found in customer metadata");
-//       return;
-//     }
+    // Construct the event using the raw body and signature
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+  } catch (err: unknown) { // Changed from 'any' to 'unknown'
+    // Safely handle the error
+    if (err instanceof Error) {
+      console.error('Error verifying Stripe webhook signature:', err.message);
+    } else {
+      console.error('Unknown error verifying Stripe webhook signature:', err);
+    }
+    return NextResponse.json(
+      { error: 'Invalid signature' },
+      { status: 400 }
+    );
+  }
 
-//     // Ensure subscription.items and price exist
-//     const subscriptionItem = subscription.items?.data[0];
-//     if (!subscriptionItem || !subscriptionItem.price) {
-//       console.error("Subscription item or price data is missing.");
-//       return;
-//     }
+  // Handle the event based on its type
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session;
 
-//     const productId = subscriptionItem.price.product as string;
-//     const priceId = subscriptionItem.price.id as string;
-//     const amount = subscriptionItem.price.unit_amount
-//       ? subscriptionItem.price.unit_amount / 100
-//       : 0; // Amount in dollars
+    // Extract customer email from the session
+    const customerEmail = session.customer_email;
+    const amountPaid = session.amount_total; // Amount in the smallest currency unit (e.g., cents for USD)
+    const currency = session.currency;
 
-//     // Map productId to product names
-//     const productNames: Record<string, string> = {
-//       "prod_R4PEWuvnkmbB5k": "1 Month Plan",
-//       "prod_R4PExcfu7NWbvu": "3 Months Plan",
-//       "prod_R4PFOPF698qZAr": "1 Year Plan",
-//     };
+    console.log('Checkout session completed for email:', customerEmail);
+    console.log('Paid amount (in smallest unit):', amountPaid);
+    console.log('Currency:', currency ? currency.toUpperCase() : 'UNKNOWN');
 
-//     const productName = productNames[productId] || "Unknown Product";
+    if (!customerEmail) {
+      console.error('No customer email found in the checkout session.');
+      return NextResponse.json(
+        { error: 'No customer email found in session' },
+        { status: 400 }
+      );
+    }
 
-//     const subscriptionData = {
-//       clerkUserId,
-//       subscriptionId: subscription.id,
-//       productId,
-//       priceId,
-//       amount,
-//       productName,
-//       status: subscription.status,
-//       currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-//     };
+    if (!currency) { // Added check for currency
+      console.error('No currency found in the checkout session.');
+      return NextResponse.json(
+        { error: 'No currency found in session' },
+        { status: 400 }
+      );
+    }
 
-//     // Create or update subscription
-//     await createOrUpdateSubscription(subscriptionData);
+    try {
+      // Connect to the MongoDB database
+      await connectToDatabase();
 
-//     // Create a transaction record for the subscription event with specific product information
-//     if (eventType === "customer.subscription.created") {
-//       const reason = `${productName} Created`; // e.g., "1 Month Plan Created"
-//       await createTransaction(clerkUserId, amount, reason);
-//       console.log(
-//         `Transaction created for clerkUserId: ${clerkUserId}, amount: ${amount}, reason: ${reason}`
-//       );
-//     } else if (eventType === "customer.subscription.updated") {
-//       const reason = `${productName} Updated`; // e.g., "1 Month Plan Updated"
-//       await createTransaction(clerkUserId, amount, reason);
-//       console.log(
-//         `Transaction created for clerkUserId: ${clerkUserId}, amount: ${amount}, reason: ${reason}`
-//       );
-//     }
+      // Find the user by email
+      const user = await User.findOne({ email: customerEmail });
 
-//     // **Process Referral Commission**
-//     await processReferralCommission(clerkUserId, amount);
-//   } catch (error) {
-//     console.error("Error handling subscription event:", error);
-//   }
-// }
+      if (user) {
+        // Determine the subscription plan based on the amount paid
+        let plan: 'monthly' | 'annual';
+        let scans: number | null;
+
+        if (amountPaid === 800) { // $8.00
+          plan = 'monthly';
+          scans = 50;
+        } else if (amountPaid === 5500) { // $55.00
+          plan = 'annual';
+          scans = null; // Unlimited scans
+        } else {
+          console.error(`Unexpected amount paid: ${amountPaid} ${currency.toUpperCase()}`);
+          return NextResponse.json(
+            { error: 'Unexpected amount paid' },
+            { status: 400 }
+          );
+        }
+
+        // Calculate the end date based on the plan
+        const currentDate = new Date();
+        let endDate: Date;
+
+        if (plan === 'monthly') {
+          endDate = new Date(currentDate);
+          endDate.setMonth(endDate.getMonth() + 1);
+        } else { // 'annual'
+          endDate = new Date(currentDate);
+          endDate.setFullYear(endDate.getFullYear() + 1);
+        }
+
+        // Check if the user already has a subscription
+        const existingSubscription = await Subscription.findOne({ user: user._id });
+
+        if (existingSubscription) {
+          // Update existing subscription
+          existingSubscription.plan = plan;
+          existingSubscription.scans = scans;
+          existingSubscription.startDate = currentDate;
+          existingSubscription.endDate = endDate;
+          await existingSubscription.save();
+
+          console.log(`Updated subscription for user ID ${user._id}: Plan=${plan}, Scans=${scans}, EndDate=${endDate}`);
+        } else {
+          // Create a new subscription
+          const newSubscription = new Subscription({
+            user: user._id,
+            plan: plan,
+            scans: scans,
+            startDate: currentDate,
+            endDate: endDate,
+          });
+
+          await newSubscription.save();
+
+          console.log(`Created new subscription for user ID ${user._id}: Plan=${plan}, Scans=${scans}, EndDate=${endDate}`);
+        }
+
+        // Log the user's data and the paid amount
+        console.log(`User ID for email ${customerEmail}: ${user._id}`);
+        console.log(`Paid amount for User ID ${user._id}: ${amountPaid / 100} ${currency.toUpperCase()}`); // Convert to main currency unit
+      } else {
+        // Log if no user is found with the provided email
+        console.error(`No user found with email: ${customerEmail}`);
+      }
+
+      // TODO: Implement additional logic, such as sending confirmation emails, etc.
+    } catch (dbError: unknown) { // Changed from 'any' to 'unknown'
+      // Safely handle the database error
+      if (dbError instanceof Error) {
+        console.error('Database error:', dbError.message);
+      } else {
+        console.error('Unknown database error:', dbError);
+      }
+      return NextResponse.json(
+        { error: 'Database error' },
+        { status: 500 }
+      );
+    }
+  } else {
+    // Log unhandled event types
+    console.log(`Unhandled event type ${event.type}`);
+  }
+
+  // Respond with a 200 status code to acknowledge receipt of the event
+  return NextResponse.json({ received: true });
+}
