@@ -101,7 +101,7 @@ export async function PATCH(
 
     // Send email using the jobstatus API
     const emailResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/jobstatus`,
+      `${process.env.NEXT_PUBLIC_SERVER_URL}/api/jobstatus`,
       {
         method: "POST",
         headers: {
