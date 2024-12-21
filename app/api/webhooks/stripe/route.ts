@@ -67,10 +67,7 @@ export async function POST(req: Request) {
     const amountPaid = session.amount_total; // Amount in the smallest currency unit (e.g., cents for USD)
     const currency = session.currency;
 
-    console.log('Checkout session completed for email:', customerEmail);
-    console.log('Paid amount (in smallest unit):', amountPaid);
-    console.log('Currency:', currency ? currency.toUpperCase() : 'UNKNOWN');
-
+   
     if (!customerEmail) {
       console.error('No customer email found in the checkout session.');
       return NextResponse.json(
@@ -149,13 +146,11 @@ export async function POST(req: Request) {
 
           await newSubscription.save();
 
-          console.log(`Created new subscription for user ID ${user._id}: Plan=${plan}, Scans=${scans}, EndDate=${endDate}`);
         }
 
         // Log the user's data and the paid amount
-        console.log(`User ID for email ${customerEmail}: ${user._id}`);
-        console.log(`Paid amount for User ID ${user._id}: ${amountPaid / 100} ${currency.toUpperCase()}`); // Convert to main currency unit
-      } else {
+      
+    } else {
         // Log if no user is found with the provided email
         console.error(`No user found with email: ${customerEmail}`);
       }
