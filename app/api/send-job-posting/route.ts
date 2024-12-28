@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       },
     });
 
-    const adminLink = `http://localhost:3000/admin?jobId=${jobId}`;
+    const adminLink = `https://fitforhire.kanchanadev.org/admin?jobId=${jobId}`;
 
     const mailOptions = {
       from: `"Job Posting Form" <${process.env.APP_EMAIL}>`,
